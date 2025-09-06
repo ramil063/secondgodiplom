@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package items.textdata;
+
+option go_package = "gen/items/textdata";
+
+import "google/protobuf/empty.proto";
+
+service Service  {
+  // Создание новых текстовых данных
+  rpc CreateTextData (CreateTextDataRequest) returns (TextDataItem);
+
+  // Получение данных по ID
+  rpc GetTextData (GetTextDataRequest) returns (TextDataItem);
+
+  // Получение списка всех паролей пользователя
+  rpc ListTextDataItems (ListTextDataRequest) returns (ListTextDataResponse);
+
+  // Обновление данных
+  rpc UpdateTextData (UpdateTextDataRequest) returns (TextDataItem);
+
+  // Удаление данных
+  rpc DeleteTextData (DeleteTextDataRequest) returns (google.protobuf.Empty);
+}
+
+// Запросы
+message CreateTextDataRequest {
+  string text_data = 1;       // Данные (будут зашифрованы)
+  string description = 2;     // Описание
+  string meta_data_name = 3;  // Название метаданных
+  string meta_data_value = 4; // Значение метаданных
+}
+
+message ListTextDataRequest {
+  int32 page = 1;       // Какая страница
+  int32 per_page = 2;   // Сколько записей на странице
+  string filter = 3;    // Фильтр по тегам или категориям
+}
+
+message GetTextDataRequest {
+  int64 id = 1;  // UUID данных
+}
+
+message UpdateTextDataRequest {
+  int64 id = 1;
+  string text_data = 2;
+  string description = 3;
+  string meta_data_name = 4;  // Название метаданных
+  string meta_data_value = 5; // Значение метаданных
+}
+
+message DeleteTextDataRequest {
+  int64 id = 1;
+}
+
+// Ответы
+message ListTextDataResponse {
+  repeated TextDataItem TextDataItems = 1;
+  int32 total_count = 2;     // Общее количество записей
+  int32 total_pages = 3;     // Общее количество страниц
+  int32 current_page = 4;    // Текущая страница
+}
+
+// Основная сущность
+message TextDataItem {
+  int64 id = 1;                           // Идентификатор
+  string text_data = 2;                   // Данные (будут зашифрованы)
+  string description = 3;                 // Описание
+  string created_at = 4;                  // Дата создания
+  repeated MetaData meta_data = 5; // Список метаданных
+}
+
+message MetaData {
+  int64 id = 1;               // Идентификатор
+  string name = 2;  // Название метаданных
+  string value = 3; // Значение метаданных
+}
