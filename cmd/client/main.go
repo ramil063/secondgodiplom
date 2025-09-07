@@ -12,6 +12,7 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog/registration"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/grpc"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/queue"
+	cookieContants "github.com/ramil063/secondgodiplom/internal/constants/cookie"
 	"github.com/ramil063/secondgodiplom/internal/security/cookie"
 )
 
@@ -23,7 +24,7 @@ func main() {
 		fmt.Println("---- ОШИБКА ЗАПУСКА СЕРВИСОВ ----")
 		log.Fatal(err)
 	}
-	accessToken, refreshToken, _, err := cookie.LoadTokens()
+	accessToken, refreshToken, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {
 		fmt.Println("---- ОШИБКА ЗАГРУЗКИ ТОКЕНОВ ----\n", err.Error())
 	}

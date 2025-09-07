@@ -50,10 +50,15 @@ func (i *Item) SaveChunk(
 	algorithm string,
 	iv []byte,
 ) error {
-	result, err := i.Repository.Pool.Exec(ctx, `
-        INSERT INTO binary_file_chunk (file_id, chunk_index, encrypted_data, encryption_algorithm, iv)
+	result, err := i.Repository.Pool.Exec(
+		ctx,
+		`INSERT INTO binary_file_chunk (file_id, chunk_index, encrypted_data, encryption_algorithm, iv)
         VALUES ($1, $2, $3, $4, $5)`,
-		fileID, chunkIndex, encryptedData, algorithm, iv,
+		fileID,
+		chunkIndex,
+		encryptedData,
+		algorithm,
+		iv,
 	)
 
 	if err != nil {
@@ -63,7 +68,7 @@ func (i *Item) SaveChunk(
 	// Проверяем, что файл был найден и обновлен
 	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("file not found or already deleted: ID %s", fileID)
+		return fmt.Errorf("file not found or already deleted: ID %d", fileID)
 	}
 	return err
 }
@@ -90,7 +95,7 @@ func (i *Item) MarkFileComplete(ctx context.Context, fileID int64, totalBytes in
 	// Проверяем, что файл был найден и обновлен
 	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("file not found or already deleted: ID %s", fileID)
+		return fmt.Errorf("file not found or already deleted: ID %d", fileID)
 	}
 
 	return nil
@@ -181,9 +186,7 @@ func (r *Item) GetChunksInRange(ctx context.Context, fileID int64, start, end in
 func (i *Item) DeleteFile(ctx context.Context, userID, fileID int64) error {
 	exec, err := i.Repository.Pool.Exec(
 		ctx,
-		`UPDATE binary_file 
-				SET is_deleted=TRUE 
-				WHERE id = $1 AND user_id = $2`,
+		`UPDATE binary_file SET is_deleted=TRUE WHERE id = $1 AND user_id = $2`,
 		fileID,
 		userID)
 

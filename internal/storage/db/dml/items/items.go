@@ -158,7 +158,7 @@ func (pi *Item) GetListItems(
 		var pwd itemModel.ItemData
 		var metadataJSON []byte
 
-		err := rows.Scan(
+		err = rows.Scan(
 			&pwd.ID,
 			&pwd.Data,
 			&pwd.Description,
@@ -172,7 +172,7 @@ func (pi *Item) GetListItems(
 		}
 
 		// Парсим JSON с метаданными
-		if err := json.Unmarshal(metadataJSON, &pwd.MetaDataItems); err != nil {
+		if err = json.Unmarshal(metadataJSON, &pwd.MetaDataItems); err != nil {
 			return nil, 0, fmt.Errorf("failed to parse metadata: %w", err)
 		}
 
@@ -269,9 +269,7 @@ func (pi *Item) GetItem(ctx context.Context, itemID int64) (*itemModel.ItemData,
 func (pi *Item) DeleteItem(ctx context.Context, itemID int64) error {
 	exec, err := pi.Repository.Pool.Exec(
 		ctx,
-		`UPDATE encrypted_item 
-				SET is_deleted=TRUE 
-				WHERE id = $1`,
+		`UPDATE encrypted_item SET is_deleted=TRUE WHERE id = $1`,
 		itemID)
 
 	if err != nil {

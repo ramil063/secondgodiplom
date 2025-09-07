@@ -11,7 +11,7 @@ import (
 func (s *Auth) GetUserByLogin(ctx context.Context, login string) (*user.User, error) {
 	row := s.Repository.Pool.QueryRow(
 		ctx,
-		"SELECT id,password_hash FROM users WHERE login = $1",
+		"SELECT id, password_hash FROM users WHERE login = $1",
 		login)
 
 	var id int

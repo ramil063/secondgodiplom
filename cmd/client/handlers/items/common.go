@@ -4,12 +4,13 @@ import (
 	"context"
 	"log"
 
+	cookieContants "github.com/ramil063/secondgodiplom/internal/constants/cookie"
 	"github.com/ramil063/secondgodiplom/internal/security/cookie"
 	"google.golang.org/grpc/metadata"
 )
 
 func CreateAuthContext() context.Context {
-	accessToken, _, _, err := cookie.LoadTokens()
+	accessToken, _, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {
 		log.Fatal(err)
 	}

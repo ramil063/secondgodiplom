@@ -45,7 +45,7 @@ func (s *Server) CreateTextData(ctx context.Context, req *textDataPb.CreateTextD
 	// 4. Сохраняем в основную таблицу
 	itemID, err := s.storage.SaveEncryptedData(ctx, &itemModel.EncryptedItem{
 		UserID:              int64(userID),
-		Type:                itemsConstants.TypePasswords,
+		Type:                itemsConstants.TypeText,
 		Data:                encryptedData,
 		Description:         req.Description,
 		EncryptionAlgorithm: algorithm,
@@ -96,7 +96,7 @@ func (s *Server) ListTextDataItems(
 
 	// Получаем данные из репозитория
 	passwordsList, totalCount, err := s.storage.GetListItems(
-		ctx, int64(userID), req.Page, req.PerPage, itemsConstants.TypePasswords, req.Filter,
+		ctx, int64(userID), req.Page, req.PerPage, itemsConstants.TypeText, req.Filter,
 	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to list text data")

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
+	cookieContants "github.com/ramil063/secondgodiplom/internal/constants/cookie"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 	"github.com/ramil063/secondgodiplom/internal/security/cookie"
 )
@@ -22,7 +23,7 @@ func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSe
 	}
 
 	// Сохраняем токены (например, в файл)
-	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, resp.ExpiresIn)
+	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, cookieContants.FileToSaveCookie, resp.ExpiresIn)
 	if err != nil {
 		log.Fatal("❌ Ошибка сохранения токенов:", err)
 		return dialog.UserSession{}, err
@@ -36,7 +37,7 @@ func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSe
 }
 
 func Refresh(client auth.AuthServiceClient) {
-	_, refreshToken, _, err := cookie.LoadTokens()
+	_, refreshToken, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {
 		log.Fatal("Load tokens failed:", err)
 	}
@@ -49,7 +50,7 @@ func Refresh(client auth.AuthServiceClient) {
 	}
 
 	// Сохраняем токены (например, в файл)
-	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, resp.ExpiresIn)
+	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, cookieContants.FileToSaveCookie, resp.ExpiresIn)
 	if err != nil {
 		log.Fatal("Cookie save failed:", err)
 	}
