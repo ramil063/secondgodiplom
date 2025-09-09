@@ -16,7 +16,7 @@ func SaveToDeleteQueue(id int64) (string, error) {
 	}
 
 	// Сохраняем в JSON файл
-	filename := fmt.Sprintf("%s/delete_%s.json", queue.DirBinary, request.ID)
+	filename := fmt.Sprintf("%s/delete_%d.json", queue.DirBinary, request.ID)
 	data, err := json.MarshalIndent(request, "", "  ")
 	if err != nil {
 		return "", err

@@ -27,7 +27,7 @@ func CreatePassword(client password.ServiceClient) {
 		log.Fatal("CreatePassword failed: empty user id")
 	}
 
-	fmt.Printf("Password %s created successfully!\n", resp.Id)
+	fmt.Printf("Password %d created successfully!\n", resp.Id)
 }
 
 func ListPasswords(client password.ServiceClient, page, perPage int32, filter string) {
@@ -48,7 +48,7 @@ func ListPasswords(client password.ServiceClient, page, perPage int32, filter st
 	fmt.Println("Passwords:")
 
 	for i, p := range resp.Passwords {
-		fmt.Printf("%d. %s\n", i+1, p.Id)
+		fmt.Printf("%d. %d\n", i+1, p.Id)
 		fmt.Printf("   Login: %s\n", p.Login)
 		fmt.Printf("   Password: %s\n", p.Password)
 		fmt.Printf("   Target: %s\n", p.Target)

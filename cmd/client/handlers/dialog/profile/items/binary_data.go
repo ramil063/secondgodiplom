@@ -464,7 +464,7 @@ func getFileInfo(client binarydata.ServiceClient) {
 	fmt.Printf("Id: %d\n", resp.Id)
 	fmt.Printf("   Название: %s\n", resp.Filename)
 	fmt.Printf("   Тип: %s\n", resp.MimeType)
-	fmt.Printf("   Размер(байт): %s\n", resp.Size)
+	fmt.Printf("   Размер(байт): %d\n", resp.Size)
 	fmt.Printf("   Описание: %s\n", resp.Description)
 	fmt.Printf("   Создано: %s\n", resp.CreatedAt)
 	if len(resp.MetaData) > 0 {

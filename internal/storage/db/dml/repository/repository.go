@@ -33,20 +33,6 @@ func (dbr *Repository) ExecContext(ctx context.Context, query string, args ...an
 	return result, nil
 }
 
-func (dbr *Repository) QueryRowContext(ctx context.Context, query string, args ...any) pgx.Row {
-	row := dbr.Pool.QueryRow(ctx, query, args...)
-	return row
-}
-
-func (dbr *Repository) QueryContext(ctx context.Context, query string, args ...any) (pgx.Rows, error) {
-	rows, err := dbr.Pool.Query(ctx, query, args...)
-
-	if err != nil {
-		return nil, internalErrors.NewDBError(err)
-	}
-	return rows, nil
-}
-
 // Open открыть соединение с бд
 func (dbr *Repository) Open(config *serverConfig.ServerConfig) (*pgxpool.Pool, error) {
 	conf, err := pgxpool.ParseConfig(config.DatabaseURI)

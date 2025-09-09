@@ -321,7 +321,7 @@ func (pi *Item) UpdateItem(
 	setQuery = strings.Trim(setQuery, ",")
 
 	if setQuery == "" {
-		return 0, errors.New("UpdateItem empty data ti update")
+		return 0, errors.New("UpdateItem empty data in update")
 	}
 
 	row := pi.Repository.Pool.QueryRow(

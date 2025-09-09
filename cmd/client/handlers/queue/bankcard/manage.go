@@ -33,7 +33,7 @@ func SaveToCreateQueue(
 	}
 
 	// Сохраняем в JSON файл
-	filename := fmt.Sprintf("%s/create_%s.json", queue.DirBankcard, request.ID)
+	filename := fmt.Sprintf("%s/create_%d.json", queue.DirBankcard, request.ID)
 	data, err := json.MarshalIndent(request, "", "  ")
 	if err != nil {
 		return "", err

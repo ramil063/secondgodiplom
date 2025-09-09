@@ -283,6 +283,7 @@ func TestItem_GetMetaDataList(t *testing.T) {
 func TestItem_GetTotalCount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
 	type args struct {
 		ctx      context.Context
 		query    string
@@ -334,32 +335,72 @@ func TestItem_GetTotalCount(t *testing.T) {
 }
 
 func TestItem_SaveEncryptedData(t *testing.T) {
-	type fields struct {
-		Repository *repository.Repository
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	type args struct {
 		ctx           context.Context
 		encryptedItem *itemModel.EncryptedItem
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    int64
-		wantErr bool
+		name       string
+		args       args
+		wantTypeId int64
+		want       int64
 	}{
-		{},
+		{
+			name: "test 1",
+			args: args{
+				ctx: context.Background(),
+				encryptedItem: &itemModel.EncryptedItem{
+					UserID:              1,
+					Type:                "password",
+					Data:                []byte("password"),
+					Description:         "123",
+					EncryptionAlgorithm: "AES-256-GCM",
+					Iv:                  []byte("iv"),
+				},
+			},
+			wantTypeId: 1,
+			want:       1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			poolMock := repository2.NewMockPooler(ctrl)
 			pi := &Item{
-				Repository: tt.fields.Repository,
+				Repository: &repository.Repository{Pool: poolMock},
 			}
+
+			poolMock.EXPECT().
+				QueryRow(
+					tt.args.ctx,
+					gomock.Any(),
+					tt.args.encryptedItem.Type,
+				).
+				Return(&mock.Row{
+					Values: []interface{}{
+						tt.wantTypeId,
+					},
+				})
+			poolMock.EXPECT().
+				QueryRow(
+					tt.args.ctx,
+					gomock.Any(),
+					tt.args.encryptedItem.Data,
+					tt.args.encryptedItem.Description,
+					tt.args.encryptedItem.UserID,
+					tt.wantTypeId,
+					tt.args.encryptedItem.EncryptionAlgorithm,
+					tt.args.encryptedItem.Iv,
+				).
+				Return(&mock.Row{
+					Values: []interface{}{
+						tt.want,
+					},
+				})
 			got, err := pi.SaveEncryptedData(tt.args.ctx, tt.args.encryptedItem)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("SaveEncryptedData() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			assert.NoError(t, err)
 			if got != tt.want {
 				t.Errorf("SaveEncryptedData() got = %v, want %v", got, tt.want)
 			}
@@ -368,61 +409,108 @@ func TestItem_SaveEncryptedData(t *testing.T) {
 }
 
 func TestItem_SaveMetadata(t *testing.T) {
-	type fields struct {
-		Repository *repository.Repository
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	type args struct {
 		ctx      context.Context
 		metadata *itemModel.MetaData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name  string
+		query string
+		args  args
 	}{
-		{},
+		{
+			name:  "test 1",
+			query: `INSERT INTO item_metadata (item_id, name, value) VALUES ($1, $2, $3)`,
+			args: args{
+				ctx: context.Background(),
+				metadata: &itemModel.MetaData{
+					ItemID: 1,
+					Name:   "name",
+					Value:  "value",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			poolMock := repository2.NewMockPooler(ctrl)
 			pi := &Item{
-				Repository: tt.fields.Repository,
+				Repository: &repository.Repository{Pool: poolMock},
 			}
-			if err := pi.SaveMetadata(tt.args.ctx, tt.args.metadata); (err != nil) != tt.wantErr {
-				t.Errorf("SaveMetadata() error = %v, wantErr %v", err, tt.wantErr)
-			}
+
+			expectedCommandTag := pgconn.CommandTag("INSERT 0 1")
+			poolMock.EXPECT().
+				Exec(
+					tt.args.ctx,
+					tt.query,
+					tt.args.metadata.ItemID,
+					tt.args.metadata.Name,
+					tt.args.metadata.Value).
+				Return(expectedCommandTag, nil)
+			err := pi.SaveMetadata(tt.args.ctx, tt.args.metadata)
+			assert.NoError(t, err)
 		})
 	}
 }
 
 func TestItem_UpdateItem(t *testing.T) {
-	type fields struct {
-		Repository *repository.Repository
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	type args struct {
 		ctx           context.Context
 		itemId        int64
 		encryptedItem *itemModel.EncryptedItem
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    int64
-		wantErr bool
+		name string
+		args args
+		want int64
 	}{
-		{},
+		{
+			name: "test 1",
+			args: args{
+				ctx:    context.Background(),
+				itemId: 1,
+				encryptedItem: &itemModel.EncryptedItem{
+					UserID:              1,
+					Type:                "password",
+					Data:                []byte("password"),
+					Description:         "123",
+					EncryptionAlgorithm: "AES256-GCM",
+					Iv:                  []byte("iv"),
+				},
+			},
+			want: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			poolMock := repository2.NewMockPooler(ctrl)
 			pi := &Item{
-				Repository: tt.fields.Repository,
+				Repository: &repository.Repository{Pool: poolMock},
 			}
+
+			poolMock.EXPECT().
+				QueryRow(
+					tt.args.ctx,
+					gomock.Any(),
+					tt.args.itemId,
+					tt.args.encryptedItem.Data,
+					tt.args.encryptedItem.Description,
+					tt.args.encryptedItem.EncryptionAlgorithm,
+					tt.args.encryptedItem.Iv,
+				).
+				Return(&mock.Row{
+					Values: []interface{}{
+						tt.want,
+					},
+				})
 			got, err := pi.UpdateItem(tt.args.ctx, tt.args.itemId, tt.args.encryptedItem)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateItem() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			assert.NoError(t, err)
 			if got != tt.want {
 				t.Errorf("UpdateItem() got = %v, want %v", got, tt.want)
 			}

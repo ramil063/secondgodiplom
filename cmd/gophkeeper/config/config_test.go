@@ -104,14 +104,18 @@ func TestGetConfig(t *testing.T) {
 "restore": true,
 "store_interval": "1s",
 "store_file": "/path/to/file.db",
-"database_dsn": "database",
+"database_uri": "database",
 "crypto_key": "/path/to/key.pem",
-"hash_key": "test"
+"hash_key": "test",
+  "secret": "secret",
+  "workers_count": 1,
+  "db_max_connections": 1,
+  "db_min_connections": 1
 }`))
 	defer os.Remove(file.Name())
 
-	_ = os.Setenv("CONFIG", file.Name())
-	defer os.Unsetenv("CONFIG")
+	_ = os.Setenv("GRPC_CONFIG_PATH", file.Name())
+	defer os.Unsetenv("GRPC_CONFIG_PATH")
 
 	tests := []struct {
 		want *ServerConfig
@@ -120,11 +124,15 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "Get Config",
 			want: &ServerConfig{
-				Address:       "localhost:8080",
-				DatabaseURI:   "database",
-				HashKey:       "test",
-				CryptoKey:     "/path/to/key.pem",
-				StoreInterval: "1",
+				Address:          "localhost:8080",
+				DatabaseURI:      "database",
+				HashKey:          "test",
+				CryptoKey:        "/path/to/key.pem",
+				StoreInterval:    "1",
+				Secret:           "secret",
+				WorkersCount:     1,
+				DbMaxConnections: 1,
+				DbMinConnections: 1,
 			},
 		},
 	}
