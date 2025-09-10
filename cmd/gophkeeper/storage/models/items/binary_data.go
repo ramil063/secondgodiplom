@@ -2,6 +2,7 @@ package items
 
 import "time"
 
+// FileInfo структура хранения данных о файле
 type FileInfo struct {
 	ID            int64     `json:"id"`
 	Filename      string    `json:"filename"`
@@ -14,6 +15,7 @@ type FileInfo struct {
 	MetaDataItems []*MetaData
 }
 
+// ChunkData структура для хранения разделенных частей зашифрованного файла
 type ChunkData struct {
 	ID                  int64     `json:"id"`
 	FileId              int64     `json:"file_id"`

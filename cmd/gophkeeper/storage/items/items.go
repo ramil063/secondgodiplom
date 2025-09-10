@@ -8,6 +8,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
 )
 
+// Itemer интерфейс для работы с АПИ зашифрованных данных на сервере
 type Itemer interface {
 	SaveEncryptedData(ctx context.Context, encryptedPassword *itemModel.EncryptedItem) (int64, error)
 	SaveMetadata(ctx context.Context, metadata *itemModel.MetaData) error
@@ -18,6 +19,7 @@ type Itemer interface {
 	GetMetaDataList(ctx context.Context, itemId int64) ([]*itemModel.MetaData, error)
 }
 
+// NewStorage инициализация хранилища вместе с переданным репозиторием
 func NewStorage(rep repository.Repository) Itemer {
 	return &items.Item{
 		Repository: &rep,

@@ -9,6 +9,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
 )
 
+// Filer интерфейс для работы с АПИ сервера связанной с файлами
 type Filer interface {
 	CreateFileRecord(ctx context.Context, userID int, metadata *binarydata.FileMetadata) (int64, error)
 	SaveChunk(ctx context.Context, fileID int64, chunkIndex int32, encryptedData []byte, algorithm string, iv []byte) error
@@ -20,6 +21,7 @@ type Filer interface {
 	GetTotalCount(ctx context.Context, query string, userID int64, filter string) (int32, error)
 }
 
+// NewStorage инициализация хранилища вместе с переданным репозиторием
 func NewStorage(rep repository.Repository) Filer {
 	return &binary.Item{
 		Repository: &rep,

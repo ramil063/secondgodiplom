@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// EncryptedItem структура работы с зашифрованными данными
 type EncryptedItem struct {
 	UserID              int64
 	Type                string
@@ -13,6 +14,7 @@ type EncryptedItem struct {
 	Iv                  []byte
 }
 
+// MetaData структура для работы с метаданными
 type MetaData struct {
 	ID        int64
 	ItemID    int64
@@ -21,6 +23,7 @@ type MetaData struct {
 	CreatedAt time.Time
 }
 
+// ItemData структура работы с зашифрованными данными и метаданными
 type ItemData struct {
 	ID                  int64
 	Data                []byte
