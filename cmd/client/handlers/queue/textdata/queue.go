@@ -12,13 +12,12 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
 )
 
-const Dir = "queue/text_data"
-
+// Init инициализация всего необходимого для очереди в частности создаем директорию
 func Init() {
-	// Создаем директорию для очереди
 	os.MkdirAll(queue.DirTextData, 0755)
 }
 
+// Process основной процесс работы очереди отложенных обращений на сервер
 func Process(client textdata.ServiceClient) {
 	processCreate(client)
 	processUpdate(client)

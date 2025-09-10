@@ -12,6 +12,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
 )
 
+// WorkWithPassword главное меню для работы с паролями
 func WorkWithPassword(client password.ServiceClient) dialog.AppState {
 	for {
 		dialog.ClearScreen()

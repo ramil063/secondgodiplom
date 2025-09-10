@@ -5,6 +5,9 @@ import (
 	"log"
 	"net"
 
+	"google.golang.org/grpc"
+
+	serverConfig "github.com/ramil063/secondgodiplom/cmd/gophkeeper/config"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/interceptors"
 	authServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/auth"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/bankcard"
@@ -12,18 +15,15 @@ import (
 	passwordServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/password"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/text"
 	regServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/registration"
+	localStorage "github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/items"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/items/binary"
+	"github.com/ramil063/secondgodiplom/internal/logger"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 	itemsBankcard "github.com/ramil063/secondgodiplom/internal/proto/gen/items/bankcard"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/binarydata"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
-	"google.golang.org/grpc"
-
-	serverConfig "github.com/ramil063/secondgodiplom/cmd/gophkeeper/config"
-	localStorage "github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage"
-	"github.com/ramil063/secondgodiplom/internal/logger"
 	"github.com/ramil063/secondgodiplom/internal/security/crypto"
 	"github.com/ramil063/secondgodiplom/internal/storage/db"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
@@ -93,6 +93,7 @@ func GetGRPCServer(config *serverConfig.ServerConfig) (*grpc.Server, net.Listene
 	return grpcServer, lis, nil
 }
 
+// RegisterServiceServers регистрация сервисов в сервере
 func RegisterServiceServers(
 	grpcServer *grpc.Server,
 	storage localStorage.Storager,

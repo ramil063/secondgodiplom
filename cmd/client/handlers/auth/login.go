@@ -11,6 +11,8 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/security/cookie"
 )
 
+// Login функция для авторизации и сохранения токенов авторизации
+// токены сохраняются в специальный файл
 func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSession, error) {
 	resp, err := client.Login(context.Background(), &auth.LoginRequest{
 		Login:    login,
@@ -36,6 +38,7 @@ func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSe
 	}, err
 }
 
+// Refresh функция для обновления токенов при истечении срока жизни токена авторизации
 func Refresh(client auth.AuthServiceClient) {
 	_, refreshToken, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {

@@ -12,12 +12,14 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/constants/queue"
 )
 
+// Sender структура для отправки данных на сервер
 type Sender struct {
 	clients  grpc.Clients
 	interval time.Duration
 	stopChan chan struct{}
 }
 
+// NewSender инициализация отправителя
 func NewSender(clients grpc.Clients) *Sender {
 	return &Sender{
 		clients:  clients,
@@ -26,6 +28,7 @@ func NewSender(clients grpc.Clients) *Sender {
 	}
 }
 
+// Start запуск отправки отложенных данных на сервер
 func (s *Sender) Start() {
 	passwordQueue.Init()
 	textdataQueue.Init()
@@ -50,6 +53,7 @@ func (s *Sender) Start() {
 	}
 }
 
+// Stop остановка отправки
 func (s *Sender) Stop() {
 	close(s.stopChan)
 }

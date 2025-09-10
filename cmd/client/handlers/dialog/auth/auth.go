@@ -11,6 +11,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 )
 
+// Login основная функция авторизации пользователя
 func Login(client auth.AuthServiceClient) (dialog.AppState, dialog.UserSession) {
 	dialog.ClearScreen()
 	fmt.Println("\n=== АВТОРИЗАЦИЯ ===")

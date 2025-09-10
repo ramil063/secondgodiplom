@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/ramil063/secondgodiplom/internal/constants/queue"
 )
 
+// SaveToCreateQueue создание файла с данными пароля для отправки на сервер и создания новой записи с паролем
 func SaveToCreateQueue(login, password, target, description, metaDataName, metaDataValue string) (string, error) {
 	request := Request{
 		ID:            uuid.New().String(),
@@ -40,6 +42,7 @@ func SaveToCreateQueue(login, password, target, description, metaDataName, metaD
 	return request.ID, nil
 }
 
+// SaveToUpdateQueue создание файла с данными пароля для отправки на сервер и обновления данных о пароле
 func SaveToUpdateQueue(id int64, login, password, target, description string) (string, error) {
 	request := Request{
 		ID:          strconv.Itoa(int(id)),
@@ -67,6 +70,7 @@ func SaveToUpdateQueue(id int64, login, password, target, description string) (s
 	return request.ID, nil
 }
 
+// SaveToDeleteQueue создание файла с данными пароля для отправки на сервер и удаления
 func SaveToDeleteQueue(id int64) (string, error) {
 	request := Request{
 		ID:         strconv.Itoa(int(id)),

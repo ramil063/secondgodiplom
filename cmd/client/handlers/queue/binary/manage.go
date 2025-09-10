@@ -8,6 +8,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/constants/queue"
 )
 
+// SaveToDeleteQueue создание файла с данными для отправки на сервер и удаления ранее загруженного файла
 func SaveToDeleteQueue(id int64) (string, error) {
 	request := Request{
 		ID:         id,

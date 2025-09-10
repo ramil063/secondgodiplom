@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server надстройка над стандартным gRPC сервером(логика работы с паролями)
 type Server struct {
 	passwordPb.UnimplementedServiceServer
 
@@ -22,6 +23,7 @@ type Server struct {
 	Decryptor crypto.Decryptor
 }
 
+// NewServer инициализация сервера, шифровальщика, дешифровщика и структуры для работы с хранилищем
 func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypto.Decryptor) *Server {
 	return &Server{
 		storage:   storage,
@@ -30,6 +32,9 @@ func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypt
 	}
 }
 
+// CreatePassword создание записи о пароле
+// так же сохранение метаданных о нем
+// все специфичные данные шифруются
 func (s *Server) CreatePassword(ctx context.Context, req *passwordPb.CreatePasswordRequest) (*passwordPb.PasswordItem, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {
@@ -90,6 +95,8 @@ func (s *Server) CreatePassword(ctx context.Context, req *passwordPb.CreatePassw
 	}, nil
 }
 
+// ListPasswords листинг данных о паролях
+// так же показываются метаданные по каждому
 func (s *Server) ListPasswords(
 	ctx context.Context,
 	req *passwordPb.ListPasswordsRequest,
@@ -161,6 +168,8 @@ func (s *Server) ListPasswords(
 	}, nil
 }
 
+// GetPassword получение данных по 1 паролю
+// так же возвращаются и метаданные
 func (s *Server) GetPassword(ctx context.Context, req *passwordPb.GetPasswordRequest) (*passwordPb.PasswordItem, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -203,6 +212,8 @@ func (s *Server) GetPassword(ctx context.Context, req *passwordPb.GetPasswordReq
 	}, nil
 }
 
+// DeletePassword удаление данных о пароле
+// используется мягкое удаление
 func (s *Server) DeletePassword(ctx context.Context, req *passwordPb.DeletePasswordRequest) (*empty.Empty, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -215,6 +226,7 @@ func (s *Server) DeletePassword(ctx context.Context, req *passwordPb.DeletePassw
 	return &empty.Empty{}, nil
 }
 
+// UpdatePassword обновление данных по паролю
 func (s *Server) UpdatePassword(
 	ctx context.Context,
 	req *passwordPb.UpdatePasswordRequest,

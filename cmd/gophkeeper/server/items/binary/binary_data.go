@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server надстройка над стандартным gRPC сервером(логика работы с файлами)
 type Server struct {
 	binarydata.UnimplementedServiceServer
 
@@ -24,6 +25,8 @@ type Server struct {
 	workersCount int
 }
 
+// NewServer инициализация сервера, шифровальщика, дешифровщика и структуры для работы с хранилищем
+// установка количества потоков обработчиков файла
 func NewServer(storage binary.Filer, encryptor crypto.Encryptor, decryptor crypto.Decryptor, config *config.ServerConfig) *Server {
 	return &Server{
 		storage:      storage,
@@ -45,6 +48,9 @@ type chunkResult struct {
 	err            error
 }
 
+// UploadFile загрузка файла
+// так же сохранение метаданных о ней
+// все данные о файле шифруются
 func (s *Server) UploadFile(stream binarydata.Service_UploadFileServer) error {
 	ctx := stream.Context()
 	// Безопасное извлечение userID из контекста
@@ -186,6 +192,7 @@ func (s *Server) chunkProcessorWorker(
 	}
 }
 
+// DownloadFile скачивание файла с сервера
 func (s *Server) DownloadFile(req *binarydata.DownloadFileRequest, stream binarydata.Service_DownloadFileServer) error {
 	ctx := stream.Context()
 	userID := ctx.Value("userID").(int)
@@ -304,6 +311,8 @@ func calculateChunkRanges(totalChunks, workersCount int32) []struct{ start, end 
 	return ranges
 }
 
+// DeleteFile удаление файла с хранилища
+// применяется мягкое удаление
 func (s *Server) DeleteFile(ctx context.Context, req *binarydata.DeleteFileRequest) (*binarydata.DeleteFileResponse, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {
@@ -319,6 +328,8 @@ func (s *Server) DeleteFile(ctx context.Context, req *binarydata.DeleteFileReque
 	}, nil
 }
 
+// ListFiles листинг данных о файлах
+// сами файлы не скачиваются
 func (s *Server) ListFiles(ctx context.Context, req *binarydata.ListFilesRequest) (*binarydata.ListFilesResponse, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {
@@ -363,6 +374,8 @@ func (s *Server) ListFiles(ctx context.Context, req *binarydata.ListFilesRequest
 	}, nil
 }
 
+// GetFileInfo получение данных по одному файлу
+// сам файл не скачивается
 func (s *Server) GetFileInfo(ctx context.Context, req *binarydata.GetFileInfoRequest) (*binarydata.FileInfoItem, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {

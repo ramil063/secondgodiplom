@@ -13,6 +13,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/bankcard"
 )
 
+// WorkWithBankCardData главное меню для работы с банковской картой
 func WorkWithBankCardData(client bankcard.ServiceClient) dialog.AppState {
 	for {
 		dialog.ClearScreen()

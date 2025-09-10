@@ -1,5 +1,6 @@
 package dialog
 
+// AppState тип для хранения состояния приложения
 type AppState int
 
 const (
@@ -10,6 +11,7 @@ const (
 	StateExit
 )
 
+// UserSession пользовательская сессия, используется для пропуска к работе только авторизованного пользователя
 type UserSession struct {
 	AccessToken  string
 	RefreshToken string

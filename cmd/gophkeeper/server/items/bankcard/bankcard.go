@@ -15,6 +15,8 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/security/crypto"
 )
 
+// Server надстройка над стандартным gRPC сервером(логика работы с банковскими картами)
+// шифрование/дешифровка/хранение данных
 type Server struct {
 	bankcardsPb.UnimplementedServiceServer
 
@@ -23,6 +25,7 @@ type Server struct {
 	Decryptor crypto.Decryptor
 }
 
+// NewServer инициализация сервера, шифровальщика, дешифровщика и структуры для работы с хранилищем
 func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypto.Decryptor) *Server {
 	return &Server{
 		storage:   storage,
@@ -31,6 +34,9 @@ func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypt
 	}
 }
 
+// CreateCardData создание записи о банковской карте
+// так же сохранение метаданных о ней
+// все специфичные данные шифруются
 func (s *Server) CreateCardData(ctx context.Context, req *bankcardsPb.CreateCardDataRequest) (*bankcardsPb.CardDataItem, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {
@@ -95,6 +101,8 @@ func (s *Server) CreateCardData(ctx context.Context, req *bankcardsPb.CreateCard
 	}, nil
 }
 
+// ListCardsData листинг данных о банковской карте
+// так же берутся мета данные карты
 func (s *Server) ListCardsData(
 	ctx context.Context,
 	req *bankcardsPb.ListCardsDataRequest,
@@ -168,6 +176,7 @@ func (s *Server) ListCardsData(
 	}, nil
 }
 
+// GetCardData получение данных об одной карте
 func (s *Server) GetCardData(ctx context.Context, req *bankcardsPb.GetCardDataRequest) (*bankcardsPb.CardDataItem, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -212,6 +221,7 @@ func (s *Server) GetCardData(ctx context.Context, req *bankcardsPb.GetCardDataRe
 	}, nil
 }
 
+// DeleteCardData удаление данных о карте
 func (s *Server) DeleteCardData(ctx context.Context, req *bankcardsPb.DeleteCardDataRequest) (*empty.Empty, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -224,6 +234,7 @@ func (s *Server) DeleteCardData(ctx context.Context, req *bankcardsPb.DeleteCard
 	return &empty.Empty{}, nil
 }
 
+// UpdateCardData обновляем данные о карте
 func (s *Server) UpdateCardData(
 	ctx context.Context,
 	req *bankcardsPb.UpdateCardDataRequest,

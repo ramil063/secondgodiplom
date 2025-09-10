@@ -12,6 +12,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
 )
 
+// WorkWithTextData главное меню для работы с текстовыми данными
 func WorkWithTextData(client textdata.ServiceClient) dialog.AppState {
 	for {
 		dialog.ClearScreen()

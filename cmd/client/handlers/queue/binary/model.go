@@ -2,6 +2,7 @@ package binary
 
 import "time"
 
+// Request общая структура для отправки отложенных запросов на сервер
 type Request struct {
 	GeneratedID   string    `json:"generated_id"`
 	ID            int64     `json:"id"`

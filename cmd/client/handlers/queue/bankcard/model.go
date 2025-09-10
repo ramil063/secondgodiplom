@@ -2,6 +2,7 @@ package bankcard
 
 import "time"
 
+// Request общая структура для отправки отложенных запросов на сервер
 type Request struct {
 	GeneratedID     string    `json:"generatedId"`
 	ID              int64     `json:"id"`

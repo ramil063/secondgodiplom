@@ -10,11 +10,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// AuthInterceptors обработка авторизации
 type AuthInterceptors struct {
 	Unary  grpc.UnaryServerInterceptor
 	Stream grpc.StreamServerInterceptor
 }
 
+// NewAuthInterceptors инициализация основной структуры авторизации
 func NewAuthInterceptors(secret string) *AuthInterceptors {
 	return &AuthInterceptors{
 		Unary:  NewAuthInterceptor(secret),
@@ -28,10 +30,12 @@ type wrappedServerStream struct {
 	ctx context.Context
 }
 
+// Context возврат контекста
 func (w *wrappedServerStream) Context() context.Context {
 	return w.ctx
 }
 
+// NewAuthInterceptor инициализация простого интерсептора авторизации
 func NewAuthInterceptor(secret string) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		// Пропускаем аутентификационные методы
@@ -48,6 +52,7 @@ func NewAuthInterceptor(secret string) grpc.UnaryServerInterceptor {
 	}
 }
 
+// NewStreamAuthInterceptor инициализация стримингового интерсептора авторизации
 func NewStreamAuthInterceptor(secret string) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		// Пропускаем аутентификационные методы

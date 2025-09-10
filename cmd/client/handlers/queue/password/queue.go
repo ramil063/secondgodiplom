@@ -12,11 +12,12 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
 )
 
+// Init инициализация всего необходимого для очереди в частности создаем директорию
 func Init() {
-	// Создаем директорию для очереди
 	os.MkdirAll(queue.DirPassword, 0755)
 }
 
+// Process основной процесс работы очереди отложенных обращений на сервер
 func Process(client password.ServiceClient) {
 	processCreate(client)
 	processUpdate(client)

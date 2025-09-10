@@ -22,6 +22,7 @@ const numberOfChunks = 20
 
 var writeMutex sync.Mutex
 
+// WorkWithFile главное меню для работы с файлами
 func WorkWithFile(client binarydata.ServiceClient) dialog.AppState {
 	for {
 		dialog.ClearScreen()
@@ -33,9 +34,9 @@ func WorkWithFile(client binarydata.ServiceClient) dialog.AppState {
 
 		switch choice {
 		case "1":
-			UploadFileFromConsole(client)
+			uploadFileFromConsole(client)
 		case "2":
-			DownloadFileFromConsole(client)
+			downloadFileFromConsole(client)
 		case "3":
 			listOfFilesData(client)
 		case "4":
@@ -64,7 +65,7 @@ func showMenuFile() {
 	fmt.Print("Выберите действие: ")
 }
 
-func UploadFileFromConsole(client binarydata.ServiceClient) {
+func uploadFileFromConsole(client binarydata.ServiceClient) {
 	// Запрашиваем путь к файлу
 	fmt.Print("Введите полный путь к файлу: ")
 	scanner := bufio.NewScanner(os.Stdin)
@@ -210,7 +211,7 @@ func sendChunkWorker(stream binarydata.Service_UploadFileClient, chunks <-chan *
 	fmt.Println("Все части успешно отправлены")
 }
 
-func DownloadFileFromConsole(client binarydata.ServiceClient) {
+func downloadFileFromConsole(client binarydata.ServiceClient) {
 	// 1. Запрашиваем ID файла
 	fmt.Print("Введите идентификатор файла для загрузки: ")
 	var fileID int64

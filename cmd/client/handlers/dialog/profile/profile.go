@@ -11,6 +11,7 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/grpc"
 )
 
+// UserProfile функция работы с главным меню профиля пользователя
 func UserProfile(session dialog.UserSession, clients *grpc.Clients) dialog.AppState {
 	if session.AccessToken == "" {
 		dialog.ClearScreen()

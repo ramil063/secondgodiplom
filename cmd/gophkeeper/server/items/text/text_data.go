@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server надстройка над стандартным gRPC сервером(логика работы с текстом)
 type Server struct {
 	textDataPb.UnimplementedServiceServer
 
@@ -22,6 +23,7 @@ type Server struct {
 	Decryptor crypto.Decryptor
 }
 
+// NewServer инициализация сервера, шифровальщика, дешифровщика и структуры для работы с хранилищем
 func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypto.Decryptor) *Server {
 	return &Server{
 		storage:   storage,
@@ -30,6 +32,9 @@ func NewServer(storage items.Itemer, encryptor crypto.Encryptor, decryptor crypt
 	}
 }
 
+// CreateTextData создание записи о текстовых данных
+// так же сохранение метаданных о них
+// весь текст шифруется
 func (s *Server) CreateTextData(ctx context.Context, req *textDataPb.CreateTextDataRequest) (*textDataPb.TextDataItem, error) {
 	userID, ok := ctx.Value("userID").(int)
 	if !ok {
@@ -76,6 +81,7 @@ func (s *Server) CreateTextData(ctx context.Context, req *textDataPb.CreateTextD
 	}, nil
 }
 
+// ListTextDataItems листинг текстовых данных
 func (s *Server) ListTextDataItems(
 	ctx context.Context,
 	req *textDataPb.ListTextDataRequest,
@@ -141,6 +147,7 @@ func (s *Server) ListTextDataItems(
 	}, nil
 }
 
+// GetTextData получение 1 текстовых данных
 func (s *Server) GetTextData(ctx context.Context, req *textDataPb.GetTextDataRequest) (*textDataPb.TextDataItem, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -177,6 +184,7 @@ func (s *Server) GetTextData(ctx context.Context, req *textDataPb.GetTextDataReq
 	}, nil
 }
 
+// DeleteTextData удаление текстовых данных
 func (s *Server) DeleteTextData(ctx context.Context, req *textDataPb.DeleteTextDataRequest) (*empty.Empty, error) {
 	// Извлекаем userID из контекста
 	if _, ok := ctx.Value("userID").(int); !ok {
@@ -189,6 +197,7 @@ func (s *Server) DeleteTextData(ctx context.Context, req *textDataPb.DeleteTextD
 	return &empty.Empty{}, nil
 }
 
+// UpdateTextData обновление текстовых данных
 func (s *Server) UpdateTextData(
 	ctx context.Context,
 	req *textDataPb.UpdateTextDataRequest,

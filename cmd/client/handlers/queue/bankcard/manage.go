@@ -10,6 +10,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/constants/queue"
 )
 
+// SaveToCreateQueue создание файла с данными карты для отправки на сервер и создания новой карты
 func SaveToCreateQueue(
 	number string,
 	validUntilYear int32,
@@ -47,6 +48,7 @@ func SaveToCreateQueue(
 	return request.GeneratedID, nil
 }
 
+// SaveToUpdateQueue создание файла с данными карты для отправки на сервер и обновления данных по карте
 func SaveToUpdateQueue(
 	id int64,
 	number string,
@@ -85,6 +87,7 @@ func SaveToUpdateQueue(
 	return request.GeneratedID, nil
 }
 
+// SaveToDeleteQueue создание файла с данными карты для отправки на сервер и удаления
 func SaveToDeleteQueue(id int64) (string, error) {
 	request := Request{
 		GeneratedID: uuid.New().String(),

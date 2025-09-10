@@ -8,6 +8,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 )
 
+// RegisterUser регистрации пользователя
 func RegisterUser(client auth.RegistrationServiceClient, login, password, firstName, lastName string) {
 	resp, err := client.Register(context.Background(), &auth.RegisterRequest{
 		Login:     login,

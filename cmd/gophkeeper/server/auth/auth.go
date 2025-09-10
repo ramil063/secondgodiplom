@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Server надстройка над стандартным gRPC сервером(авторизация)
 type Server struct {
 	auth.UnimplementedAuthServiceServer
 
@@ -20,6 +21,7 @@ type Server struct {
 	Secret  string
 }
 
+// NewAuthServer инициализация сервера авторизации, хранилища и секрета для шифрования данных
 func NewAuthServer(storage storage.Authenticator, secret string) *Server {
 	return &Server{
 		storage: storage,
@@ -27,8 +29,9 @@ func NewAuthServer(storage storage.Authenticator, secret string) *Server {
 	}
 }
 
+// Login авторизация пользователя
+// сохранение данных по токенам
 func (s *Server) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-
 	// Проверяем пользователя
 	user, err := s.storage.GetUserByLogin(ctx, req.Login)
 	if err != nil {
@@ -70,8 +73,8 @@ func (s *Server) Login(ctx context.Context, req *auth.LoginRequest) (*auth.Login
 	}, nil
 }
 
+// Refresh обновление токенов на более свежие
 func (s *Server) Refresh(ctx context.Context, req *auth.RefreshRequest) (*auth.RefreshResponse, error) {
-
 	// 1. Валидируем старый refresh token
 	oldTokenInfo, err := s.storage.GetRefreshToken(ctx, req.RefreshToken)
 	if err != nil {

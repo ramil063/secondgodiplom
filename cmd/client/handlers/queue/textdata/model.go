@@ -2,6 +2,7 @@ package textdata
 
 import "time"
 
+// Request общая структура для отправки отложенных запросов на сервер
 type Request struct {
 	ID            string    `json:"id"`
 	TextData      string    `json:"text_data"`

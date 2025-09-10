@@ -11,6 +11,7 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 )
 
+// UserData данные необходимые пользователю для регистрации
 type UserData struct {
 	Login     string
 	Password  string
@@ -90,6 +91,7 @@ func collectRegistrationData() UserData {
 	return userData
 }
 
+// Registration функция для отображения интерфейса регистрации пользователя
 func Registration(client auth.RegistrationServiceClient) dialog.AppState {
 	fmt.Println("\n=== РЕГИСТРАЦИЯ ===")
 

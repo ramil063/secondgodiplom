@@ -3,15 +3,17 @@ package grpc
 import (
 	"fmt"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/bankcard"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/binarydata"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
+// Clients структура хранения клиентов gRPC сервера
 type Clients struct {
 	conn               *grpc.ClientConn
 	AuthClient         auth.AuthServiceClient
@@ -22,6 +24,7 @@ type Clients struct {
 	BinaryDataClient   binarydata.ServiceClient
 }
 
+// NewGRPCClients функция инициализации клиентов
 func NewGRPCClients(serverAddr string) (*Clients, error) {
 	credentials := insecure.NewCredentials()
 	conn, err := grpc.NewClient(

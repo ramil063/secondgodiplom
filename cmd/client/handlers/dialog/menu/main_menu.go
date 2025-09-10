@@ -10,6 +10,7 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 )
 
+// ShowMainMenu показ главного меню
 func ShowMainMenu() dialog.AppState {
 	dialog.ClearScreen()
 	fmt.Println("Добро пожаловать!")

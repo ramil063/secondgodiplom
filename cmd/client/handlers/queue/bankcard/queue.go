@@ -11,11 +11,12 @@ import (
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/bankcard"
 )
 
+// Init инициализация всего необходимого для очереди в частности создаем директорию
 func Init() {
-	// Создаем директорию для очереди
 	os.MkdirAll(queue.DirBankcard, 0755)
 }
 
+// Process основной процесс работы очереди отложенных обращений на сервер
 func Process(client bankcard.ServiceClient) {
 	processCreate(client)
 	processUpdate(client)
