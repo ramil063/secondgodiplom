@@ -91,6 +91,7 @@ func authenticateRequest(ctx context.Context, secret string) (context.Context, e
 func isAuthMethod(fullMethod string) bool {
 	authMethods := map[string]bool{
 		"/auth.AuthService/Login":            true,
+		"/auth.AuthService/StreamLogin":      true,
 		"/auth.RegistrationService/Register": true,
 		"/auth.AuthService/Refresh":          true,
 	}
