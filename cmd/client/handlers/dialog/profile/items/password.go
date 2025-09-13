@@ -19,20 +19,49 @@ func WorkWithPassword(client password.ServiceClient) dialog.AppState {
 		showMenuPasswords()
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания: %v\n", err)
+			return dialog.StateMainMenu
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
 		case "1":
-			createPassword()
+			err = createPassword()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при создании данных пароля: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "2":
-			showPassword(client)
+			err = showPassword(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при показе данных пароля: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "3":
-			listOfPasswords(client)
+			err = listOfPasswords(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при листинге данных пароля: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "4":
-			changePassword()
+			err = changePassword()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при изменении данных пароля: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "5":
-			deletePassword()
+			err = deletePassword()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при удалении данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
@@ -55,20 +84,22 @@ func showMenuPasswords() {
 	fmt.Print("Выберите действие: ")
 }
 
-func createPassword() {
+func createPassword() error {
 	dialog.ClearScreen()
 	fmt.Println("=== СОЗДАНИЕ ДАННЫХ О ПАРОЛЕ ===")
-
-	//ctx := items.CreateAuthContext()
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var login, pwd, target, description, metaDataName, metaDataValue string
+	var err error
 
 	// Сбор данных
 	for {
 		fmt.Print("Введите логин: ")
-		login, _ = reader.ReadString('\n')
+		login, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		login = strings.TrimSpace(login)
 
 		if len(login) <= 0 {
@@ -80,7 +111,10 @@ func createPassword() {
 
 	for {
 		fmt.Print("Введите пароль: ")
-		pwd, _ = reader.ReadString('\n')
+		pwd, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		pwd = strings.TrimSpace(pwd)
 
 		if len(pwd) <= 0 {
@@ -91,27 +125,37 @@ func createPassword() {
 	}
 
 	fmt.Print("Введите систему или сайт: ")
-	target, _ = reader.ReadString('\n')
+	target, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	target = strings.TrimSpace(target)
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	fmt.Print("Введите название метаданных: ")
-	metaDataName, _ = reader.ReadString('\n')
+	metaDataName, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	metaDataName = strings.TrimSpace(metaDataName)
 
 	fmt.Print("Введите значение метаданных: ")
-	metaDataValue, _ = reader.ReadString('\n')
+	metaDataValue, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	metaDataValue = strings.TrimSpace(metaDataValue)
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := passwordQueue.SaveToCreateQueue(login, pwd, target, description, metaDataName, metaDataValue)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -120,9 +164,10 @@ func createPassword() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func showPassword(client password.ServiceClient) {
+func showPassword(client password.ServiceClient) error {
 	dialog.ClearScreen()
 	fmt.Println("=== ИНФОРМАЦИЯ О ПАРОЛЕ ===")
 
@@ -130,16 +175,17 @@ func showPassword(client password.ServiceClient) {
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	// Запрашиваем данные с сервера
 	resp, err := client.GetPassword(ctx, &password.GetPasswordRequest{
 		Id: id,
 	})
 
 	if err != nil {
-		fmt.Printf("❌ Ошибка получения данных\n")
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка получения данных\n")
 	}
 
 	fmt.Printf("Id: %d\n", resp.Id)
@@ -159,9 +205,10 @@ func showPassword(client password.ServiceClient) {
 	fmt.Println("---")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func listOfPasswords(client password.ServiceClient) {
+func listOfPasswords(client password.ServiceClient) error {
 	currentPage := int32(1)
 	filter := ""
 
@@ -177,9 +224,7 @@ func listOfPasswords(client password.ServiceClient) {
 			Filter: filter,
 		})
 		if err != nil {
-			fmt.Printf("❌ Ошибка получения данных: %v\n", err)
-			dialog.PressEnterToContinue()
-			return
+			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
 
 		// Вывод паролей
@@ -212,7 +257,10 @@ func listOfPasswords(client password.ServiceClient) {
 		fmt.Print("Выберите действие: ")
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
@@ -235,8 +283,11 @@ func listOfPasswords(client password.ServiceClient) {
 		case "3": // Ввод номера страницы
 			fmt.Print("Введите номер страницы: ")
 			var newPage int32
-			_, err := fmt.Scanln(&newPage)
-			if err == nil && newPage >= 1 && newPage <= resp.TotalPages {
+			_, err = fmt.Scanln(&newPage)
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
+			if newPage >= 1 && newPage <= resp.TotalPages {
 				currentPage = newPage
 			} else {
 				fmt.Println("❌ Неверный номер страницы")
@@ -245,7 +296,10 @@ func listOfPasswords(client password.ServiceClient) {
 
 		case "4": // Установить фильтр
 			fmt.Print("Введите текст для фильтрации: ")
-			newFilter, _ := reader.ReadString('\n')
+			newFilter, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
 			filter = strings.TrimSpace(newFilter)
 			currentPage = 1 // Сброс на первую страницу при новом фильтре
 
@@ -254,7 +308,7 @@ func listOfPasswords(client password.ServiceClient) {
 			currentPage = 1
 
 		case "0": // Выход
-			return
+			return nil
 
 		default:
 			fmt.Println("❌ Неверный выбор")
@@ -263,23 +317,23 @@ func listOfPasswords(client password.ServiceClient) {
 	}
 }
 
-func changePassword() {
+func changePassword() error {
 	dialog.ClearScreen()
 	fmt.Println("=== ОБНОВЛЕНИЕ ДАННЫХ О ПАРОЛЕ ===")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var login, pwd, target, description string
+	var err error
 
 	// Сбор данных
 
 	var id int64
 	for {
 		fmt.Print("Введите идентификатор записи: ")
-		_, err := fmt.Scanln(&id)
+		_, err = fmt.Scanln(&id)
 		if err != nil {
-			fmt.Println("❌ Ошибка ввода идентификатора")
-			continue
+			return fmt.Errorf("❌ Ошибка ввода идентификатора")
 		}
 
 		if id <= 0 {
@@ -291,7 +345,10 @@ func changePassword() {
 
 	for {
 		fmt.Print("Введите логин: ")
-		login, _ = reader.ReadString('\n')
+		login, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		login = strings.TrimSpace(login)
 
 		if len(login) <= 0 {
@@ -303,7 +360,10 @@ func changePassword() {
 
 	for {
 		fmt.Print("Введите пароль: ")
-		pwd, _ = reader.ReadString('\n')
+		pwd, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		pwd = strings.TrimSpace(pwd)
 
 		if len(pwd) <= 0 {
@@ -314,19 +374,23 @@ func changePassword() {
 	}
 
 	fmt.Print("Введите систему или сайт: ")
-	target, _ = reader.ReadString('\n')
+	target, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	target = strings.TrimSpace(target)
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := passwordQueue.SaveToUpdateQueue(id, login, pwd, target, description)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -335,22 +399,24 @@ func changePassword() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func deletePassword() {
+func deletePassword() error {
 	dialog.ClearScreen()
 	fmt.Println("=== ИНФОРМАЦИЯ О ПАРОЛЕ ===")
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := passwordQueue.SaveToDeleteQueue(id)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -359,4 +425,5 @@ func deletePassword() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }

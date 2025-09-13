@@ -19,20 +19,49 @@ func WorkWithTextData(client textdata.ServiceClient) dialog.AppState {
 		showMenuTextData()
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания: %v\n", err)
+			return dialog.StateMainMenu
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
 		case "1":
-			createTextData()
+			err = createTextData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при создании данных: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "2":
-			showTextData(client)
+			err = showTextData(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при показе данных: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "3":
-			listOfTextData(client)
+			err = listOfTextData(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при листинге данных: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "4":
-			changeTextData()
+			err = changeTextData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при изменении данных: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "5":
-			deleteTextData()
+			err = deleteTextData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при удалении данных: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
@@ -55,37 +84,48 @@ func showMenuTextData() {
 	fmt.Print("Выберите действие: ")
 }
 
-func createTextData() {
+func createTextData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== СОЗДАНИЕ ДАННЫХ ===")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var text, description, metaDataName, metaDataValue string
+	var err error
 
 	// Сбор данных с валидацией
 	fmt.Print("Введите текст: ")
-	text, _ = reader.ReadString('\n')
+	text, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	text = strings.TrimSpace(text)
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	fmt.Print("Введите название метаданных: ")
-	metaDataName, _ = reader.ReadString('\n')
+	metaDataName, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	metaDataName = strings.TrimSpace(metaDataName)
 
 	fmt.Print("Введите значение метаданных: ")
-	metaDataValue, _ = reader.ReadString('\n')
+	metaDataValue, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	metaDataValue = strings.TrimSpace(metaDataValue)
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := textdataQueue.SaveToCreateQueue(text, description, metaDataName, metaDataValue)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -94,9 +134,10 @@ func createTextData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func showTextData(client textdata.ServiceClient) {
+func showTextData(client textdata.ServiceClient) error {
 	dialog.ClearScreen()
 	fmt.Println("=== ИНФОРМАЦИЯ ===")
 
@@ -104,16 +145,17 @@ func showTextData(client textdata.ServiceClient) {
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	// Запрашиваем данные с сервера
 	resp, err := client.GetTextData(ctx, &textdata.GetTextDataRequest{
 		Id: id,
 	})
 
 	if err != nil {
-		fmt.Printf("❌ Ошибка получения данных\n")
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка получения данных\n")
 	}
 
 	fmt.Printf("Id: %d\n", resp.Id)
@@ -131,9 +173,10 @@ func showTextData(client textdata.ServiceClient) {
 	fmt.Println("---")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func listOfTextData(client textdata.ServiceClient) {
+func listOfTextData(client textdata.ServiceClient) error {
 	currentPage := int32(1)
 	filter := ""
 
@@ -149,9 +192,7 @@ func listOfTextData(client textdata.ServiceClient) {
 			Filter: filter,
 		})
 		if err != nil {
-			fmt.Printf("❌ Ошибка получения данных: %v\n", err)
-			dialog.PressEnterToContinue()
-			return
+			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
 
 		// Вывод паролей
@@ -182,7 +223,10 @@ func listOfTextData(client textdata.ServiceClient) {
 		fmt.Print("Выберите действие: ")
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
@@ -205,8 +249,11 @@ func listOfTextData(client textdata.ServiceClient) {
 		case "3": // Ввод номера страницы
 			fmt.Print("Введите номер страницы: ")
 			var newPage int32
-			_, err := fmt.Scanln(&newPage)
-			if err == nil && newPage >= 1 && newPage <= resp.TotalPages {
+			_, err = fmt.Scanln(&newPage)
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
+			if newPage >= 1 && newPage <= resp.TotalPages {
 				currentPage = newPage
 			} else {
 				fmt.Println("❌ Неверный номер страницы")
@@ -215,7 +262,10 @@ func listOfTextData(client textdata.ServiceClient) {
 
 		case "4": // Установить фильтр
 			fmt.Print("Введите текст для фильтрации: ")
-			newFilter, _ := reader.ReadString('\n')
+			newFilter, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
 			filter = strings.TrimSpace(newFilter)
 			currentPage = 1 // Сброс на первую страницу при новом фильтре
 
@@ -224,7 +274,7 @@ func listOfTextData(client textdata.ServiceClient) {
 			currentPage = 1
 
 		case "0": // Выход
-			return
+			return nil
 
 		default:
 			fmt.Println("❌ Неверный выбор")
@@ -233,7 +283,7 @@ func listOfTextData(client textdata.ServiceClient) {
 	}
 }
 
-func changeTextData() {
+func changeTextData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== ОБНОВЛЕНИЕ ДАННЫХ ===")
 
@@ -245,21 +295,28 @@ func changeTextData() {
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
 	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 
 	fmt.Print("Введите новый текст: ")
-	text, _ = reader.ReadString('\n')
+	text, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	text = strings.TrimSpace(text)
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := textdataQueue.SaveToUpdateQueue(id, text, description)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -268,22 +325,24 @@ func changeTextData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func deleteTextData() {
+func deleteTextData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== УДАЛЕНИЕ ===")
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := textdataQueue.SaveToDeleteQueue(id)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -292,4 +351,5 @@ func deleteTextData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }

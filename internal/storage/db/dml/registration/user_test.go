@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/user"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/mock"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
-	repository2 "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
-	"github.com/stretchr/testify/assert"
+	repositoryMock "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
 )
 
 func TestReg_RegisterUser(t *testing.T) {
@@ -41,7 +42,7 @@ func TestReg_RegisterUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			s := &Reg{
 				Repository: &repository.Repository{Pool: poolMock},
 			}

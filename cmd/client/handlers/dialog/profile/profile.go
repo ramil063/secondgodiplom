@@ -23,7 +23,11 @@ func UserProfile(session dialog.UserSession, clients *grpc.Clients) dialog.AppSt
 		showUserProfileMenu()
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания выбора: %v\n", err)
+			return dialog.StateMainMenu // Выход в главное меню
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {

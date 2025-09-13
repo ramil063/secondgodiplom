@@ -2,14 +2,14 @@ package registration
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 )
 
 // RegisterUser регистрации пользователя
-func RegisterUser(client auth.RegistrationServiceClient, login, password, firstName, lastName string) {
+func RegisterUser(client auth.RegistrationServiceClient, login, password, firstName, lastName string) error {
 	resp, err := client.Register(context.Background(), &auth.RegisterRequest{
 		Login:     login,
 		Password:  password,
@@ -18,12 +18,15 @@ func RegisterUser(client auth.RegistrationServiceClient, login, password, firstN
 	})
 
 	if err != nil {
-		log.Fatal("Registration failed:", err)
+		fmt.Println("Registration failed:", err)
+		return err
 	}
 
 	if resp.UserId == "" {
-		log.Fatal("Registration failed: empty user id")
+		fmt.Println("Registration failed: empty user id")
+		return errors.New("Registration failed: empty user id")
 	}
 
 	fmt.Printf("User %s created successfully!\n", resp.UserId)
+	return nil
 }

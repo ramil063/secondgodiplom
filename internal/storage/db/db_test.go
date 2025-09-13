@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgconn"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
-	repository2 "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
+	repositoryMock "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +25,7 @@ func TestCheckPing(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			rep := &repository.Repository{Pool: poolMock}
 
 			poolMock.EXPECT().
@@ -51,7 +51,7 @@ func TestCreateTables(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			rep := &repository.Repository{Pool: poolMock}
 
 			expectedCommandTag := pgconn.CommandTag("INSERT 0 1")
@@ -80,7 +80,7 @@ func TestInit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			rep := &repository.Repository{Pool: poolMock}
 
 			poolMock.EXPECT().

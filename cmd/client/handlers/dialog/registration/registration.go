@@ -19,14 +19,17 @@ type UserData struct {
 	LastName  string
 }
 
-func collectRegistrationData() UserData {
+func collectRegistrationData() (UserData, error) {
 	reader := bufio.NewReader(os.Stdin)
 	userData := UserData{}
 
 	// Сбор данных с валидацией
 	for {
 		fmt.Print("Введите логин: ")
-		login, _ := reader.ReadString('\n')
+		login, err := reader.ReadString('\n')
+		if err != nil {
+			return userData, fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		login = strings.TrimSpace(login)
 
 		if len(login) <= 1 {
@@ -39,7 +42,10 @@ func collectRegistrationData() UserData {
 
 	for {
 		fmt.Print("Введите пароль: ")
-		password, _ := reader.ReadString('\n')
+		password, err := reader.ReadString('\n')
+		if err != nil {
+			return userData, fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		password = strings.TrimSpace(password)
 
 		if len(password) <= 5 {
@@ -52,7 +58,10 @@ func collectRegistrationData() UserData {
 
 	for {
 		fmt.Print("Введите подтверждение пароля: ")
-		passwordConfirm, _ := reader.ReadString('\n')
+		passwordConfirm, err := reader.ReadString('\n')
+		if err != nil {
+			return userData, fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		passwordConfirm = strings.TrimSpace(passwordConfirm)
 
 		if passwordConfirm != userData.Password {
@@ -64,7 +73,10 @@ func collectRegistrationData() UserData {
 
 	for {
 		fmt.Print("Введите имя: ")
-		firstName, _ := reader.ReadString('\n')
+		firstName, err := reader.ReadString('\n')
+		if err != nil {
+			return userData, fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		firstName = strings.TrimSpace(firstName)
 
 		if len(firstName) <= 1 {
@@ -77,7 +89,10 @@ func collectRegistrationData() UserData {
 
 	for {
 		fmt.Print("Введите фамилию: ")
-		lastName, _ := reader.ReadString('\n')
+		lastName, err := reader.ReadString('\n')
+		if err != nil {
+			return userData, fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		lastName = strings.TrimSpace(lastName)
 
 		if len(lastName) <= 2 {
@@ -88,14 +103,18 @@ func collectRegistrationData() UserData {
 		break
 	}
 
-	return userData
+	return userData, nil
 }
 
 // Registration функция для отображения интерфейса регистрации пользователя
 func Registration(client auth.RegistrationServiceClient) dialog.AppState {
 	fmt.Println("\n=== РЕГИСТРАЦИЯ ===")
 
-	userData := collectRegistrationData()
+	userData, err := collectRegistrationData()
+	if err != nil {
+		fmt.Println("Возникла ошибка при регистрации пользователя:", err)
+		return dialog.StateMainMenu
+	}
 
 	// Подтверждение
 	fmt.Println("\n--- Подтверждение ---")
@@ -104,12 +123,16 @@ func Registration(client auth.RegistrationServiceClient) dialog.AppState {
 	fmt.Printf("Фамилия: %s\n", userData.LastName)
 
 	if confirmData() {
-		registration.RegisterUser(
+		err := registration.RegisterUser(
 			client,
 			userData.Login,
 			userData.Password,
 			userData.FirstName,
 			userData.LastName)
+		if err != nil {
+			fmt.Println("Возникла ошибка при регистрации пользователя:", err)
+			return dialog.StateMainMenu
+		}
 	} else {
 		fmt.Println("❌ Регистрация отменена")
 	}
@@ -121,7 +144,11 @@ func confirmData() bool {
 
 	for {
 		fmt.Print("Подтвердить регистрацию? (y/n): ")
-		answer, _ := reader.ReadString('\n')
+		answer, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания: %s\n", err)
+			return false
+		}
 		answer = strings.TrimSpace(strings.ToLower(answer))
 
 		if answer == "y" || answer == "yes" {

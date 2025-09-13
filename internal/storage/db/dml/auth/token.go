@@ -5,11 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/auth"
 	"github.com/ramil063/secondgodiplom/internal/hash"
 	"github.com/ramil063/secondgodiplom/internal/logger"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (s *Auth) SaveAccessToken(ctx context.Context, userID int, token string) (int, error) {

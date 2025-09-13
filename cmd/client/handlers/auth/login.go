@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	cookieContants "github.com/ramil063/secondgodiplom/internal/constants/cookie"
@@ -27,7 +26,7 @@ func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSe
 	// Сохраняем токены (например, в файл)
 	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, cookieContants.FileToSaveCookie, resp.ExpiresIn)
 	if err != nil {
-		log.Fatal("❌ Ошибка сохранения токенов:", err)
+		fmt.Println("❌ Ошибка сохранения токенов:", err)
 		return dialog.UserSession{}, err
 	}
 
@@ -35,27 +34,31 @@ func Login(client auth.AuthServiceClient, login, password string) (dialog.UserSe
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
 		IsLoggedIn:   true,
-	}, err
+	}, nil
 }
 
 // Refresh функция для обновления токенов при истечении срока жизни токена авторизации
-func Refresh(client auth.AuthServiceClient) {
+func Refresh(client auth.AuthServiceClient) error {
 	_, refreshToken, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {
-		log.Fatal("Load tokens failed:", err)
+		fmt.Println("Load tokens failed:", err)
+		return err
 	}
 	resp, err := client.Refresh(context.Background(), &auth.RefreshRequest{
 		RefreshToken: refreshToken,
 	})
 
 	if err != nil {
-		log.Fatal("Refresh failed:", err)
+		fmt.Println("Refresh failed:", err)
+		return err
 	}
 
 	// Сохраняем токены (например, в файл)
 	err = cookie.SaveTokens(resp.AccessToken, resp.RefreshToken, cookieContants.FileToSaveCookie, resp.ExpiresIn)
 	if err != nil {
-		log.Fatal("Cookie save failed:", err)
+		fmt.Println("Cookie save failed:", err)
+		return err
 	}
 	fmt.Println("Refresh successful! Tokens saved.")
+	return nil
 }

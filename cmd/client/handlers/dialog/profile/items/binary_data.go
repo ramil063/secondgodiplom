@@ -29,20 +29,49 @@ func WorkWithFile(client binarydata.ServiceClient) dialog.AppState {
 		showMenuFile()
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания: %v\n", err)
+			return dialog.StateMainMenu
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
 		case "1":
-			uploadFileFromConsole(client)
+			err = uploadFileFromConsole(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при загрузке: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "2":
-			downloadFileFromConsole(client)
+			err = downloadFileFromConsole(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при скачивании: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "3":
-			listOfFilesData(client)
+			err = listOfFilesData(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при листинге данных файлов: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "4":
-			getFileInfo(client)
+			err = getFileInfo(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при показе данных файла: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "5":
-			deleteFile()
+			err = deleteFile()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при удалении данных файла: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
@@ -65,7 +94,7 @@ func showMenuFile() {
 	fmt.Print("Выберите действие: ")
 }
 
-func uploadFileFromConsole(client binarydata.ServiceClient) {
+func uploadFileFromConsole(client binarydata.ServiceClient) error {
 	// Запрашиваем путь к файлу
 	fmt.Print("Введите полный путь к файлу: ")
 	scanner := bufio.NewScanner(os.Stdin)
@@ -80,22 +109,19 @@ func uploadFileFromConsole(client binarydata.ServiceClient) {
 	// Читаем файл
 	fileData, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("Возникла ошибка чтения файла: %s\n", err.Error())
-		return
+		return fmt.Errorf("Возникла ошибка чтения файла: %s\n", err.Error())
 	}
 
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		fmt.Printf("Возникла ошибка получения данных из файла: %s\n", err.Error())
-		return
+		return fmt.Errorf("Возникла ошибка получения данных из файла: %s\n", err.Error())
 	}
 
 	// Создаем stream
 	ctx := items.CreateAuthContext()
 	stream, err := client.UploadFile(ctx)
 	if err != nil {
-		fmt.Printf("Возникла ошибка: %s\n", err.Error())
-		return
+		return fmt.Errorf("Возникла ошибка: %s\n", err.Error())
 	}
 
 	// 1. Отправляем метаданные
@@ -114,8 +140,7 @@ func uploadFileFromConsole(client binarydata.ServiceClient) {
 		},
 	})
 	if err != nil {
-		fmt.Printf("Возникла ошибка: %s\n", err.Error())
-		return
+		return fmt.Errorf("Возникла ошибка: %s\n", err.Error())
 	}
 
 	// 2. Разбиваем на чанки и отправляем в многопоточке
@@ -154,21 +179,21 @@ func uploadFileFromConsole(client binarydata.ServiceClient) {
 	// Проверяем ошибки
 	select {
 	case err := <-errors:
-		fmt.Printf("Возникла ошибка: %s\n", err.Error())
+		return fmt.Errorf("Возникла ошибка: %s\n", err.Error())
 	default:
 	}
 
 	// Завершаем загрузку
 	response, err := stream.CloseAndRecv()
 	if err != nil {
-		fmt.Printf("Возникла ошибка: %s\n", err.Error())
-		return
+		return fmt.Errorf("Возникла ошибка: %s\n", err.Error())
 	}
 
 	fmt.Printf("✅ Файл загружен успешно!\n")
 	fmt.Printf("   ID: %d\n", response.FileId)
 	fmt.Printf("   Размер: %d байт\n", response.BytesReceived)
 	fmt.Printf("   Количество частей: %d\n", totalChunks)
+	return nil
 }
 
 // Определение MIME типа по расширению файла
@@ -211,11 +236,14 @@ func sendChunkWorker(stream binarydata.Service_UploadFileClient, chunks <-chan *
 	fmt.Println("Все части успешно отправлены")
 }
 
-func downloadFileFromConsole(client binarydata.ServiceClient) {
+func downloadFileFromConsole(client binarydata.ServiceClient) error {
 	// 1. Запрашиваем ID файла
 	fmt.Print("Введите идентификатор файла для загрузки: ")
 	var fileID int64
-	fmt.Scanln(&fileID)
+	_, err := fmt.Scanln(&fileID)
+	if err != nil {
+		return fmt.Errorf("Возникла ошибка: %s\n", err.Error())
+	}
 
 	// 2. Запрашиваем папку для сохранения
 	fmt.Print("Введите для сохранения (нажмите Enter для директории по умолчанию): ")
@@ -232,13 +260,13 @@ func downloadFileFromConsole(client binarydata.ServiceClient) {
 		FileId: fileID,
 	})
 	if err != nil {
-		fmt.Println("Возникла ошибка: %w", err)
+		return fmt.Errorf("❌ Возникла ошибка: %w", err)
 	}
 
 	// 4. Получаем метаданные
 	firstResponse, err := stream.Recv()
 	if err != nil {
-		fmt.Println("Возникла ошибка: %w", err)
+		return fmt.Errorf("❌ Возникла ошибка: %w", err)
 	}
 
 	metadata := firstResponse.GetMetadata()
@@ -250,7 +278,7 @@ func downloadFileFromConsole(client binarydata.ServiceClient) {
 	filePath := filepath.Join(downloadDir, metadata.Filename)
 	file, err := os.Create(filePath)
 	if err != nil {
-		fmt.Println("Возникла ошибка: %w", err)
+		return fmt.Errorf("❌ Возникла ошибка: %w", err)
 	}
 	defer file.Close()
 
@@ -290,12 +318,13 @@ func downloadFileFromConsole(client binarydata.ServiceClient) {
 
 	// Проверяем ошибки
 	select {
-	case err := <-errors:
-		fmt.Println("Возникла ошибка: %w", err)
+	case err = <-errors:
+		return fmt.Errorf("❌ Возникла ошибка: %w", err)
 	default:
 	}
 
 	fmt.Printf("\n✅ Файл загружен успешно: %s\n", filePath)
+	return nil
 }
 
 func writeChunkWorker(file *os.File, chunks <-chan *binarydata.FileChunk, errors chan<- error, wg *sync.WaitGroup) {
@@ -325,17 +354,18 @@ func writeChunkWorker(file *os.File, chunks <-chan *binarydata.FileChunk, errors
 	}
 }
 
-func deleteFile() {
+func deleteFile() error {
 	fmt.Print("Введите идентификатор файла для удаления: ")
 	var fileID int64
-	fmt.Scanln(&fileID)
+	_, err := fmt.Scanln(&fileID)
+	if err != nil {
+		return fmt.Errorf("❌ Возникла ошибка: %w", err)
+	}
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := binaryQueue.SaveToDeleteQueue(fileID)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -344,9 +374,10 @@ func deleteFile() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func listOfFilesData(client binarydata.ServiceClient) {
+func listOfFilesData(client binarydata.ServiceClient) error {
 	currentPage := int32(1)
 	filter := ""
 
@@ -362,9 +393,7 @@ func listOfFilesData(client binarydata.ServiceClient) {
 			Filter: filter,
 		})
 		if err != nil {
-			fmt.Printf("Ошибка получения данных: %v\n", err)
-			dialog.PressEnterToContinue()
-			return
+			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
 
 		// Вывод паролей
@@ -398,7 +427,10 @@ func listOfFilesData(client binarydata.ServiceClient) {
 		fmt.Print("Выберите действие: ")
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
@@ -421,8 +453,11 @@ func listOfFilesData(client binarydata.ServiceClient) {
 		case "3": // Ввод номера страницы
 			fmt.Print("Введите номер страницы: ")
 			var newPage int32
-			_, err := fmt.Scanln(&newPage)
-			if err == nil && newPage >= 1 && newPage <= resp.TotalPages {
+			_, err = fmt.Scanln(&newPage)
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
+			if newPage >= 1 && newPage <= resp.TotalPages {
 				currentPage = newPage
 			} else {
 				fmt.Println("Неверный номер страницы")
@@ -431,7 +466,10 @@ func listOfFilesData(client binarydata.ServiceClient) {
 
 		case "4": // Установить фильтр
 			fmt.Print("Введите текст для фильтрации: ")
-			newFilter, _ := reader.ReadString('\n')
+			newFilter, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+			}
 			filter = strings.TrimSpace(newFilter)
 			currentPage = 1 // Сброс на первую страницу при новом фильтре
 
@@ -440,7 +478,7 @@ func listOfFilesData(client binarydata.ServiceClient) {
 			currentPage = 1
 
 		case "0": // Выход
-			return
+			return nil
 
 		default:
 			fmt.Println("Неверный выбор")
@@ -449,17 +487,20 @@ func listOfFilesData(client binarydata.ServiceClient) {
 	}
 }
 
-func getFileInfo(client binarydata.ServiceClient) {
+func getFileInfo(client binarydata.ServiceClient) error {
 	fmt.Print("Введите идентификатор файла для просмотра: ")
 	var fileID int64
-	fmt.Scanln(&fileID)
+	_, err := fmt.Scanln(&fileID)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
+	}
 
 	ctx := items.CreateAuthContext()
 	resp, err := client.GetFileInfo(ctx, &binarydata.GetFileInfoRequest{
 		FileId: fileID,
 	})
 	if err != nil {
-		fmt.Printf("\nОшибка получения данных по файлу: %s\n", err.Error())
+		return fmt.Errorf("\nОшибка получения данных по файлу: %s\n", err.Error())
 	}
 
 	fmt.Printf("Id: %d\n", resp.Id)
@@ -480,4 +521,5 @@ func getFileInfo(client binarydata.ServiceClient) {
 	fmt.Println("---")
 
 	dialog.PressEnterToContinue()
+	return nil
 }

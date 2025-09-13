@@ -3,9 +3,10 @@ package auth
 import (
 	"context"
 
-	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/user"
 )
 
 func (s *Auth) GetUserByLogin(ctx context.Context, login string) (*user.User, error) {

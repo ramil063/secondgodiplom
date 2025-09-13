@@ -10,11 +10,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgconn"
 	"github.com/pashagolub/pgxmock"
+	"github.com/stretchr/testify/assert"
+
 	itemModel "github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/items"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/mock"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
 	repository2 "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestItem_DeleteItem(t *testing.T) {

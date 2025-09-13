@@ -23,7 +23,11 @@ func ShowMainMenu() dialog.AppState {
 	fmt.Print("Выберите действие: ")
 
 	reader := bufio.NewReader(os.Stdin)
-	choice, _ := reader.ReadString('\n')
+	choice, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("❌ Ошибка считывания выбора: %v\n", err)
+		return dialog.StateMainMenu
+	}
 	choice = strings.TrimSpace(choice)
 
 	switch choice {

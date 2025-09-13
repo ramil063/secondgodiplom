@@ -27,6 +27,7 @@ func main() {
 	accessToken, refreshToken, _, err := cookie.LoadTokens(cookieContants.FileToSaveCookie)
 	if err != nil {
 		fmt.Println("---- ОШИБКА ЗАГРУЗКИ ТОКЕНОВ ----\n", err.Error())
+		fmt.Println("---- Попробуйте войти еще раз ----")
 	}
 
 	var session dialog.UserSession

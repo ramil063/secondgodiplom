@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/stretchr/testify/assert"
 
-	repository2 "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
+	repositoryMock "github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository/mocks"
 )
 
 func TestRepository_ExecContext(t *testing.T) {
@@ -34,7 +34,7 @@ func TestRepository_ExecContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			dbr := Repository{Pool: poolMock}
 
 			expectedCommandTag := pgconn.CommandTag(tt.commandTagQuery)
@@ -62,7 +62,7 @@ func TestRepository_PingContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			poolMock := repository2.NewMockPooler(ctrl)
+			poolMock := repositoryMock.NewMockPooler(ctrl)
 			dbr := Repository{Pool: poolMock}
 
 			poolMock.EXPECT().

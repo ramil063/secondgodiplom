@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	auth2 "github.com/ramil063/secondgodiplom/cmd/client/handlers/auth"
+	authhandler "github.com/ramil063/secondgodiplom/cmd/client/handlers/auth"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
 )
@@ -19,15 +19,25 @@ func Login(client auth.AuthServiceClient) (dialog.AppState, dialog.UserSession) 
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("Логин: ")
-	login, _ := reader.ReadString('\n')
+	login, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("❌ Ошибка считывания логина: %v\n", err)
+		dialog.PressEnterToContinue()
+		return dialog.StateExit, dialog.UserSession{}
+	}
 	login = strings.TrimSpace(login)
 
 	fmt.Print("Пароль: ")
-	password, _ := reader.ReadString('\n')
+	password, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("❌ Ошибка считывания пароля: %v\n", err)
+		dialog.PressEnterToContinue()
+		return dialog.StateExit, dialog.UserSession{}
+	}
 	password = strings.TrimSpace(password)
 
 	// Отправка запроса авторизации
-	session, err := auth2.Login(client, login, password)
+	session, err := authhandler.Login(client, login, password)
 	if err != nil {
 		fmt.Printf("❌ Ошибка авторизации: %v\n", err)
 		dialog.PressEnterToContinue()

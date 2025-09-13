@@ -11,7 +11,7 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/interceptors"
 	authServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/auth"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/bankcard"
-	binary2 "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/binary"
+	binaryItemServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/binary"
 	passwordServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/password"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/items/text"
 	regServer "github.com/ramil063/secondgodiplom/cmd/gophkeeper/server/registration"
@@ -108,7 +108,7 @@ func RegisterServiceServers(
 	passServer := passwordServer.NewServer(newStorage, manager.GetGRPCEncryptor(), manager.GetGRPCDecryptor())
 	textDataServer := text.NewServer(newStorage, manager.GetGRPCEncryptor(), manager.GetGRPCDecryptor())
 	bankcardServer := bankcard.NewServer(newStorage, manager.GetGRPCEncryptor(), manager.GetGRPCDecryptor())
-	binaryServer := binary2.NewServer(newBinaryStorage, manager.GetGRPCEncryptor(), manager.GetGRPCDecryptor(), config)
+	binaryServer := binaryItemServer.NewServer(newBinaryStorage, manager.GetGRPCEncryptor(), manager.GetGRPCDecryptor(), config)
 
 	auth.RegisterRegistrationServiceServer(grpcServer, regServer.NewRegistrationServer(regStorage))
 	auth.RegisterAuthServiceServer(grpcServer, authServer.NewAuthServer(authStorage, config.Secret))

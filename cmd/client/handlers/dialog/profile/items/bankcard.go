@@ -20,20 +20,49 @@ func WorkWithBankCardData(client bankcard.ServiceClient) dialog.AppState {
 		showMenuBankCardData()
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Ошибка считывания: %v\n", err)
+			return dialog.StateMainMenu
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
 		case "1":
-			createBankCardData()
+			err = createBankCardData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при создании данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "2":
-			showBankCardData(client)
+			err = showBankCardData(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при показе данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "3":
-			listOfBankCardData(client)
+			err = listOfBankCardData(client)
+			if err != nil {
+				fmt.Printf("❌ Ошибка при листинге данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "4":
-			changeBankCardData()
+			err = changeBankCardData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при изменении данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "5":
-			deleteBankCardData()
+			err = deleteBankCardData()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при удалении данных карты: %v\n", err)
+				dialog.PressEnterToContinue()
+				continue
+			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
@@ -56,7 +85,7 @@ func showMenuBankCardData() {
 	fmt.Print("Выберите действие: ")
 }
 
-func createBankCardData() {
+func createBankCardData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== СОЗДАНИЕ ДАННЫХ ===")
 
@@ -64,11 +93,15 @@ func createBankCardData() {
 
 	var number, holder, description, metaDataName, metaDataValue string
 	var year, month, cvv int32
+	var err error
 
 	// Сбор данных
 	for {
 		fmt.Print("Введите номер: ")
-		number, _ = reader.ReadString('\n')
+		number, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания номера: %s\n", err)
+		}
 		number = strings.TrimSpace(number)
 
 		if len(number) <= 3 {
@@ -80,9 +113,12 @@ func createBankCardData() {
 
 	for {
 		fmt.Print("Введите год: ")
-		fmt.Scanln(&year)
+		_, err = fmt.Scanln(&year)
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания года: %v\n", err)
+		}
 
-		if year > 2000 && year < 3000 {
+		if year < 2000 || year > 3000 {
 			fmt.Println("❌ Неверно введен год")
 			continue
 		}
@@ -91,9 +127,12 @@ func createBankCardData() {
 
 	for {
 		fmt.Print("Введите месяц: ")
-		fmt.Scanln(&month)
+		_, err = fmt.Scanln(&month)
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания месяца: %v\n", err)
+		}
 
-		if month > 0 && month < 13 {
+		if month < 1 || month > 12 {
 			fmt.Println("❌ Неверно введен месяц")
 			continue
 		}
@@ -102,9 +141,12 @@ func createBankCardData() {
 
 	for {
 		fmt.Print("Введите CVV код: ")
-		fmt.Scanln(&cvv)
+		_, err = fmt.Scanln(&cvv)
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания кода: %v\n", err)
+		}
 
-		if cvv > 99 && cvv < 1000 {
+		if cvv < 100 || cvv > 999 {
 			fmt.Println("❌ Неверно введен код")
 			continue
 		}
@@ -113,7 +155,10 @@ func createBankCardData() {
 
 	for {
 		fmt.Print("Введите фамилию и имя держателя: ")
-		holder, _ = reader.ReadString('\n')
+		holder, err = reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания данных держателя: %v\n", err)
+		}
 		holder = strings.TrimSpace(holder)
 
 		if len(holder) <= 3 {
@@ -133,15 +178,24 @@ func createBankCardData() {
 	}
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания описания: %v\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	fmt.Print("Введите название метаданных: ")
-	metaDataName, _ = reader.ReadString('\n')
+	metaDataName, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания названия: %v\n", err)
+	}
 	metaDataName = strings.TrimSpace(metaDataName)
 
 	fmt.Print("Введите значение метаданных: ")
-	metaDataValue, _ = reader.ReadString('\n')
+	metaDataValue, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания значения: %v\n", err)
+	}
 	metaDataValue = strings.TrimSpace(metaDataValue)
 
 	// Сохраняем в очередь вместо немедленной отправки
@@ -155,9 +209,7 @@ func createBankCardData() {
 		metaDataName,
 		metaDataValue)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -166,9 +218,10 @@ func createBankCardData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func showBankCardData(client bankcard.ServiceClient) {
+func showBankCardData(client bankcard.ServiceClient) error {
 	dialog.ClearScreen()
 	fmt.Println("=== ИНФОРМАЦИЯ ===")
 
@@ -176,16 +229,17 @@ func showBankCardData(client bankcard.ServiceClient) {
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания идентификатора: %v\n", err)
+	}
 	// Запрашиваем данные с сервера
 	resp, err := client.GetCardData(ctx, &bankcard.GetCardDataRequest{
 		Id: id,
 	})
 
 	if err != nil {
-		fmt.Printf("❌ Ошибка получения данных\n")
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка получения данных\n")
 	}
 
 	fmt.Printf("Id: %d\n", resp.Id)
@@ -206,9 +260,10 @@ func showBankCardData(client bankcard.ServiceClient) {
 	fmt.Println("---")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func listOfBankCardData(client bankcard.ServiceClient) {
+func listOfBankCardData(client bankcard.ServiceClient) error {
 	currentPage := int32(1)
 	filter := ""
 
@@ -224,9 +279,7 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 			Filter: filter,
 		})
 		if err != nil {
-			fmt.Printf("❌ Ошибка получения данных: %v\n", err)
-			dialog.PressEnterToContinue()
-			return
+			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
 
 		// Вывод паролей
@@ -236,7 +289,7 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 			for _, val := range resp.Cards {
 				fmt.Printf("ID: %d\n", val.Id)
 				fmt.Printf("   Текст: %s\n", val.Number)
-				fmt.Printf("   Годен до год/месяц: %s\n", strconv.Itoa(int(val.ValidUntilYear))+"/"+strconv.Itoa(int(val.ValidUntilMonth)))
+				fmt.Printf("   Годен до год/месяц: %d/%d\n", val.ValidUntilYear, val.ValidUntilMonth)
 				fmt.Printf("   CVV код: %d\n", val.Cvv)
 				fmt.Printf("   Держатель карты: %s\n", val.Holder)
 				fmt.Printf("   Создано: %s\n", val.CreatedAt)
@@ -260,7 +313,10 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 		fmt.Print("Выберите действие: ")
 
 		reader := bufio.NewReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+		}
 		choice = strings.TrimSpace(choice)
 
 		switch choice {
@@ -283,8 +339,12 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 		case "3": // Ввод номера страницы
 			fmt.Print("Введите номер страницы: ")
 			var newPage int32
-			_, err := fmt.Scanln(&newPage)
-			if err == nil && newPage >= 1 && newPage <= resp.TotalPages {
+			_, err = fmt.Scanln(&newPage)
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+			}
+
+			if newPage >= 1 && newPage <= resp.TotalPages {
 				currentPage = newPage
 			} else {
 				fmt.Println("❌ Неверный номер страницы")
@@ -293,7 +353,10 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 
 		case "4": // Установить фильтр
 			fmt.Print("Введите текст для фильтрации: ")
-			newFilter, _ := reader.ReadString('\n')
+			newFilter, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+			}
 			filter = strings.TrimSpace(newFilter)
 			currentPage = 1 // Сброс на первую страницу при новом фильтре
 
@@ -302,7 +365,7 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 			currentPage = 1
 
 		case "0": // Выход
-			return
+			return nil
 
 		default:
 			fmt.Println("❌ Неверный выбор")
@@ -311,7 +374,7 @@ func listOfBankCardData(client bankcard.ServiceClient) {
 	}
 }
 
-func changeBankCardData() {
+func changeBankCardData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== ОБНОВЛЕНИЕ ДАННЫХ ===")
 
@@ -323,30 +386,51 @@ func changeBankCardData() {
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
 	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 
 	// Сбор данных
 	fmt.Print("Введите номер: ")
-	number, _ = reader.ReadString('\n')
+	number, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 	number = strings.TrimSpace(number)
 
 	fmt.Print("Введите год: ")
 	var year int32
-	fmt.Scanln(&year)
+	_, err = fmt.Scanln(&year)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 
 	fmt.Print("Введите месяц: ")
 	var month int32
-	fmt.Scanln(&month)
+	_, err = fmt.Scanln(&month)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 
 	fmt.Print("Введите CVV код: ")
 	var cvv int32
-	fmt.Scanln(&cvv)
+	_, err = fmt.Scanln(&cvv)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 
 	fmt.Print("Введите фамилию и имя держателя: ")
-	holder, _ = reader.ReadString('\n')
+	holder, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 	holder = strings.TrimSpace(holder)
 
 	fmt.Print("Введите описание: ")
-	description, _ = reader.ReadString('\n')
+	description, err = reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 	description = strings.TrimSpace(description)
 
 	// Сохраняем в очередь вместо немедленной отправки
@@ -359,9 +443,7 @@ func changeBankCardData() {
 		holder,
 		description)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -370,22 +452,24 @@ func changeBankCardData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }
 
-func deleteBankCardData() {
+func deleteBankCardData() error {
 	dialog.ClearScreen()
 	fmt.Println("=== УДАЛЕНИЕ ===")
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	fmt.Scanln(&id)
+	_, err := fmt.Scanln(&id)
+	if err != nil {
+		return fmt.Errorf("❌ Ошибка считывания: %v\n", err)
+	}
 
 	// Сохраняем в очередь вместо немедленной отправки
 	queueID, err := bankcardQueue.SaveToDeleteQueue(id)
 	if err != nil {
-		fmt.Printf("❌ Ошибка сохранения в очередь: %v\n", err)
-		dialog.PressEnterToContinue()
-		return
+		return fmt.Errorf("❌ Ошибка сохранения в очередь: %v\n", err)
 	}
 
 	fmt.Printf("✅ Данные сохранены в очередь для отправки!\n")
@@ -394,4 +478,5 @@ func deleteBankCardData() {
 	fmt.Println("----------------------------------")
 
 	dialog.PressEnterToContinue()
+	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/ramil063/secondgodiplom/internal/constants/queue"
 )
 

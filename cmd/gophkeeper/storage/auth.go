@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	auth2 "github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/auth"
+	authModel "github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/auth"
 	"github.com/ramil063/secondgodiplom/cmd/gophkeeper/storage/models/user"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/auth"
 	"github.com/ramil063/secondgodiplom/internal/storage/db/dml/repository"
@@ -27,7 +27,7 @@ type TokenSaver interface {
 
 // TokenGetter интерфейс описывающий работу с получением токена
 type TokenGetter interface {
-	GetRefreshToken(ctx context.Context, refreshToken string) (*auth2.RefreshToken, error)
+	GetRefreshToken(ctx context.Context, refreshToken string) (*authModel.RefreshToken, error)
 }
 
 // TokenRevoker интерфейс описывающий работу с отзыванием токена
