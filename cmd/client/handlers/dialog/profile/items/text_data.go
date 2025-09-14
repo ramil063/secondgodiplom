@@ -9,13 +9,16 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/items"
 	textdataQueue "github.com/ramil063/secondgodiplom/cmd/client/handlers/queue/textdata"
-	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
+	textdataService "github.com/ramil063/secondgodiplom/cmd/client/services/items/textdata"
 )
 
 // WorkWithTextData главное меню для работы с текстовыми данными
-func WorkWithTextData(client textdata.ServiceClient) dialog.AppState {
+func WorkWithTextData(service textdataService.Servicer) dialog.AppState {
 	for {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		showMenuTextData()
 
 		reader := bufio.NewReader(os.Stdin)
@@ -31,42 +34,60 @@ func WorkWithTextData(client textdata.ServiceClient) dialog.AppState {
 			err = createTextData()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при создании данных: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "2":
-			err = showTextData(client)
+			err = showTextData(service)
 			if err != nil {
 				fmt.Printf("❌ Ошибка при показе данных: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "3":
-			err = listOfTextData(client)
+			err = listOfTextData(service)
 			if err != nil {
 				fmt.Printf("❌ Ошибка при листинге данных: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "4":
 			err = changeTextData()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при изменении данных: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "5":
 			err = deleteTextData()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при удалении данных: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
 			fmt.Println("❌ Неверный выбор!")
-			dialog.PressEnterToContinue()
+			err = dialog.PressEnterToContinue()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+			}
 		}
 	}
 }
@@ -85,13 +106,17 @@ func showMenuTextData() {
 }
 
 func createTextData() error {
-	dialog.ClearScreen()
+	var err error
+
+	err = dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== СОЗДАНИЕ ДАННЫХ ===")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var text, description, metaDataName, metaDataValue string
-	var err error
 
 	// Сбор данных с валидацией
 	fmt.Print("Введите текст: ")
@@ -133,27 +158,28 @@ func createTextData() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func showTextData(client textdata.ServiceClient) error {
-	dialog.ClearScreen()
+func showTextData(service textdataService.Servicer) error {
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== ИНФОРМАЦИЯ ===")
-
-	ctx := items.CreateAuthContext()
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	_, err := fmt.Scanln(&id)
+	_, err = fmt.Scanln(&id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
 	}
-	// Запрашиваем данные с сервера
-	resp, err := client.GetTextData(ctx, &textdata.GetTextDataRequest{
-		Id: id,
-	})
 
+	resp, err := service.GetTextData(items.CreateAuthContext(), id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка получения данных\n")
 	}
@@ -172,25 +198,28 @@ func showTextData(client textdata.ServiceClient) error {
 	}
 	fmt.Println("---")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func listOfTextData(client textdata.ServiceClient) error {
+func listOfTextData(service textdataService.Servicer) error {
 	currentPage := int32(1)
 	filter := ""
 
 	for {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		fmt.Println("=== СПИСОК ===")
 		fmt.Printf("Страница: %d | Фильтр: '%s'\n", currentPage, filter)
 		fmt.Println("===============================")
 
 		// Получение данных с сервера
-		resp, err := client.ListTextDataItems(items.CreateAuthContext(), &textdata.ListTextDataRequest{
-			Page:   currentPage,
-			Filter: filter,
-		})
+		resp, err := service.ListTextDataItems(items.CreateAuthContext(), currentPage, filter)
 		if err != nil {
 			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
@@ -235,7 +264,10 @@ func listOfTextData(client textdata.ServiceClient) error {
 				currentPage++
 			} else {
 				fmt.Println("ℹ️ Это последняя страница")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "2": // Предыдущая страница
@@ -243,7 +275,10 @@ func listOfTextData(client textdata.ServiceClient) error {
 				currentPage--
 			} else {
 				fmt.Println("ℹ️ Это первая страница")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "3": // Ввод номера страницы
@@ -257,7 +292,10 @@ func listOfTextData(client textdata.ServiceClient) error {
 				currentPage = newPage
 			} else {
 				fmt.Println("❌ Неверный номер страницы")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "4": // Установить фильтр
@@ -278,13 +316,19 @@ func listOfTextData(client textdata.ServiceClient) error {
 
 		default:
 			fmt.Println("❌ Неверный выбор")
-			dialog.PressEnterToContinue()
+			err = dialog.PressEnterToContinue()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+			}
 		}
 	}
 }
 
 func changeTextData() error {
-	dialog.ClearScreen()
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== ОБНОВЛЕНИЕ ДАННЫХ ===")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -294,7 +338,7 @@ func changeTextData() error {
 	// Сбор данных
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	_, err := fmt.Scanln(&id)
+	_, err = fmt.Scanln(&id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
 	}
@@ -324,17 +368,23 @@ func changeTextData() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func deleteTextData() error {
-	dialog.ClearScreen()
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== УДАЛЕНИЕ ===")
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	_, err := fmt.Scanln(&id)
+	_, err = fmt.Scanln(&id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
 	}
@@ -350,6 +400,9 @@ func deleteTextData() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }

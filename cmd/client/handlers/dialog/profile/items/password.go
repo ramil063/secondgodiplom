@@ -9,13 +9,16 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/items"
 	passwordQueue "github.com/ramil063/secondgodiplom/cmd/client/handlers/queue/password"
-	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
+	passwordService "github.com/ramil063/secondgodiplom/cmd/client/services/items/password"
 )
 
 // WorkWithPassword главное меню для работы с паролями
-func WorkWithPassword(client password.ServiceClient) dialog.AppState {
+func WorkWithPassword(service passwordService.Servicer) dialog.AppState {
 	for {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		showMenuPasswords()
 
 		reader := bufio.NewReader(os.Stdin)
@@ -31,42 +34,60 @@ func WorkWithPassword(client password.ServiceClient) dialog.AppState {
 			err = createPassword()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при создании данных пароля: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "2":
-			err = showPassword(client)
+			err = showPassword(service)
 			if err != nil {
 				fmt.Printf("❌ Ошибка при показе данных пароля: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "3":
-			err = listOfPasswords(client)
+			err = listOfPasswords(service)
 			if err != nil {
 				fmt.Printf("❌ Ошибка при листинге данных пароля: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "4":
 			err = changePassword()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при изменении данных пароля: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "5":
 			err = deletePassword()
 			if err != nil {
 				fmt.Printf("❌ Ошибка при удалении данных карты: %v\n", err)
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 				continue
 			}
 		case "6":
 			return dialog.StateMainMenu // Выход в главное меню
 		default:
 			fmt.Println("❌ Неверный выбор!")
-			dialog.PressEnterToContinue()
+			err = dialog.PressEnterToContinue()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+			}
 		}
 	}
 }
@@ -85,13 +106,17 @@ func showMenuPasswords() {
 }
 
 func createPassword() error {
-	dialog.ClearScreen()
+	var err error
+
+	err = dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== СОЗДАНИЕ ДАННЫХ О ПАРОЛЕ ===")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var login, pwd, target, description, metaDataName, metaDataValue string
-	var err error
 
 	// Сбор данных
 	for {
@@ -163,26 +188,30 @@ func createPassword() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func showPassword(client password.ServiceClient) error {
-	dialog.ClearScreen()
+func showPassword(service passwordService.Servicer) error {
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== ИНФОРМАЦИЯ О ПАРОЛЕ ===")
 
 	ctx := items.CreateAuthContext()
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	_, err := fmt.Scanln(&id)
+	_, err = fmt.Scanln(&id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
 	}
 	// Запрашиваем данные с сервера
-	resp, err := client.GetPassword(ctx, &password.GetPasswordRequest{
-		Id: id,
-	})
+	resp, err := service.GetPassword(ctx, id)
 
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка получения данных\n")
@@ -204,25 +233,28 @@ func showPassword(client password.ServiceClient) error {
 	}
 	fmt.Println("---")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func listOfPasswords(client password.ServiceClient) error {
+func listOfPasswords(service passwordService.Servicer) error {
 	currentPage := int32(1)
 	filter := ""
 
 	for {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		fmt.Println("=== УПРАВЛЕНИЕ ПАРОЛЯМИ ===")
 		fmt.Printf("Страница: %d | Фильтр: '%s'\n", currentPage, filter)
 		fmt.Println("===============================")
 
 		// Получение данных с сервера
-		resp, err := client.ListPasswords(items.CreateAuthContext(), &password.ListPasswordsRequest{
-			Page:   currentPage,
-			Filter: filter,
-		})
+		resp, err := service.ListPasswords(items.CreateAuthContext(), currentPage, filter)
 		if err != nil {
 			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 		}
@@ -269,7 +301,10 @@ func listOfPasswords(client password.ServiceClient) error {
 				currentPage++
 			} else {
 				fmt.Println("Это последняя страница")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "2": // Предыдущая страница
@@ -277,7 +312,10 @@ func listOfPasswords(client password.ServiceClient) error {
 				currentPage--
 			} else {
 				fmt.Println("Это первая страница")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "3": // Ввод номера страницы
@@ -291,7 +329,10 @@ func listOfPasswords(client password.ServiceClient) error {
 				currentPage = newPage
 			} else {
 				fmt.Println("❌ Неверный номер страницы")
-				dialog.PressEnterToContinue()
+				err = dialog.PressEnterToContinue()
+				if err != nil {
+					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+				}
 			}
 
 		case "4": // Установить фильтр
@@ -312,19 +353,26 @@ func listOfPasswords(client password.ServiceClient) error {
 
 		default:
 			fmt.Println("❌ Неверный выбор")
-			dialog.PressEnterToContinue()
+			err = dialog.PressEnterToContinue()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+			}
 		}
 	}
 }
 
 func changePassword() error {
-	dialog.ClearScreen()
+	var err error
+
+	err = dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== ОБНОВЛЕНИЕ ДАННЫХ О ПАРОЛЕ ===")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	var login, pwd, target, description string
-	var err error
 
 	// Сбор данных
 
@@ -398,17 +446,23 @@ func changePassword() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func deletePassword() error {
-	dialog.ClearScreen()
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+	}
 	fmt.Println("=== ИНФОРМАЦИЯ О ПАРОЛЕ ===")
 
 	fmt.Print("Введите идентификатор записи: ")
 	var id int64
-	_, err := fmt.Scanln(&id)
+	_, err = fmt.Scanln(&id)
 	if err != nil {
 		return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
 	}
@@ -424,6 +478,9 @@ func deletePassword() error {
 	fmt.Println("Данные будут отправлены на сервер в течение 30 секунд")
 	fmt.Println("----------------------------------")
 
-	dialog.PressEnterToContinue()
+	err = dialog.PressEnterToContinue()
+	if err != nil {
+		return err
+	}
 	return nil
 }

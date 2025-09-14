@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/ramil063/secondgodiplom/cmd/client/handlers/auth"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog/auth"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog/menu"
@@ -12,6 +11,12 @@ import (
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog/registration"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/grpc"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/queue"
+	authService "github.com/ramil063/secondgodiplom/cmd/client/services/auth"
+	bankcardService "github.com/ramil063/secondgodiplom/cmd/client/services/items/bankcard"
+	binarydataService "github.com/ramil063/secondgodiplom/cmd/client/services/items/binarydata"
+	passwordService "github.com/ramil063/secondgodiplom/cmd/client/services/items/password"
+	textdataService "github.com/ramil063/secondgodiplom/cmd/client/services/items/textdata"
+	registrationService "github.com/ramil063/secondgodiplom/cmd/client/services/registration"
 	cookieContants "github.com/ramil063/secondgodiplom/internal/constants/cookie"
 	"github.com/ramil063/secondgodiplom/internal/security/cookie"
 )
@@ -44,6 +49,13 @@ func main() {
 	go queueSender.Start()
 	defer queueSender.Stop()
 
+	authServ := authService.NewService(clients.AuthClient)
+	regService := registrationService.NewService(clients.RegistrationClient)
+	bcServ := bankcardService.NewService(clients.BankCardDataClient)
+	bServ := binarydataService.NewService(clients.BinaryDataClient)
+	passwordServ := passwordService.NewService(clients.PasswordsClient)
+	textdataServ := textdataService.NewService(clients.TextDataClient)
+
 	for {
 		currentState = <-stateChan
 		if currentState == dialog.StateExit {
@@ -57,14 +69,17 @@ func main() {
 		switch currentState {
 		case dialog.StateMainMenu:
 			nextState = menu.ShowMainMenu()
-			dialog.ClearScreen()
+			err = dialog.ClearScreen()
+			if err != nil {
+				fmt.Println("❌ Ошибка очистки экрана!")
+			}
 		case dialog.StateRegistration:
-			nextState = registration.Registration(clients.RegistrationClient)
+			nextState = registration.Registration(regService)
 		case dialog.StateLogin:
-			nextState, newSession = auth.Login(clients.AuthClient)
+			nextState, newSession = auth.Login(authServ)
 			session = newSession
 		case dialog.StateUserProfile:
-			nextState = profile.UserProfile(session, clients)
+			nextState = profile.UserProfile(session, bcServ, bServ, passwordServ, textdataServ)
 		default:
 			nextState = dialog.StateMainMenu
 		}

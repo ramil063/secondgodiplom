@@ -6,14 +6,17 @@ import (
 	"os"
 	"strings"
 
-	authhandler "github.com/ramil063/secondgodiplom/cmd/client/handlers/auth"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
-	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
+	authService "github.com/ramil063/secondgodiplom/cmd/client/services/auth"
 )
 
 // Login основная функция авторизации пользователя
-func Login(client auth.AuthServiceClient) (dialog.AppState, dialog.UserSession) {
-	dialog.ClearScreen()
+func Login(client authService.Servicer) (dialog.AppState, dialog.UserSession) {
+	err := dialog.ClearScreen()
+	if err != nil {
+		fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		return dialog.StateExit, dialog.UserSession{}
+	}
 	fmt.Println("\n=== АВТОРИЗАЦИЯ ===")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -22,7 +25,10 @@ func Login(client auth.AuthServiceClient) (dialog.AppState, dialog.UserSession) 
 	login, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Printf("❌ Ошибка считывания логина: %v\n", err)
-		dialog.PressEnterToContinue()
+		err = dialog.PressEnterToContinue()
+		if err != nil {
+			fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+		}
 		return dialog.StateExit, dialog.UserSession{}
 	}
 	login = strings.TrimSpace(login)
@@ -31,16 +37,22 @@ func Login(client auth.AuthServiceClient) (dialog.AppState, dialog.UserSession) 
 	password, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Printf("❌ Ошибка считывания пароля: %v\n", err)
-		dialog.PressEnterToContinue()
+		err = dialog.PressEnterToContinue()
+		if err != nil {
+			fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+		}
 		return dialog.StateExit, dialog.UserSession{}
 	}
 	password = strings.TrimSpace(password)
 
 	// Отправка запроса авторизации
-	session, err := authhandler.Login(client, login, password)
+	session, err := client.LoginProcess(login, password)
 	if err != nil {
 		fmt.Printf("❌ Ошибка авторизации: %v\n", err)
-		dialog.PressEnterToContinue()
+		err = dialog.PressEnterToContinue()
+		if err != nil {
+			fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+		}
 		return dialog.StateMainMenu, dialog.UserSession{}
 	}
 	fmt.Printf("✅ Авторизация успешна! Добро пожаловать!\n")

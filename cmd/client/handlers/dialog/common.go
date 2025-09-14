@@ -9,7 +9,7 @@ import (
 )
 
 // ClearScreen функция очистки экрана, применяется для удобства взаимодействия с пользователем
-func ClearScreen() {
+func ClearScreen() error {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd", "/c", "cls")
@@ -17,11 +17,19 @@ func ClearScreen() {
 		cmd = exec.Command("clear")
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // PressEnterToContinue функция задержки работы приложения, до тех пор пока пользователь не нажмет на клавишу Enter
-func PressEnterToContinue() {
+func PressEnterToContinue() error {
 	fmt.Print("\nНажмите Enter для продолжения...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+	if err != nil {
+		return err
+	}
+	return nil
 }

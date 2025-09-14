@@ -7,8 +7,7 @@ import (
 	"strings"
 
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
-	"github.com/ramil063/secondgodiplom/cmd/client/handlers/registration"
-	"github.com/ramil063/secondgodiplom/internal/proto/gen/auth"
+	"github.com/ramil063/secondgodiplom/cmd/client/services/registration"
 )
 
 // UserData данные необходимые пользователю для регистрации
@@ -32,8 +31,8 @@ func collectRegistrationData() (UserData, error) {
 		}
 		login = strings.TrimSpace(login)
 
-		if len(login) <= 1 {
-			fmt.Println("❌ Логин должен содержать минимум 2 символа")
+		if len(login) < 3 {
+			fmt.Println("❌ Логин должен содержать минимум 3 символа")
 			continue
 		}
 		userData.Login = login
@@ -48,7 +47,7 @@ func collectRegistrationData() (UserData, error) {
 		}
 		password = strings.TrimSpace(password)
 
-		if len(password) <= 5 {
+		if len(password) < 6 {
 			fmt.Println("❌ Пароль должен содержать минимум 6 символов")
 			continue
 		}
@@ -79,8 +78,8 @@ func collectRegistrationData() (UserData, error) {
 		}
 		firstName = strings.TrimSpace(firstName)
 
-		if len(firstName) <= 1 {
-			fmt.Println("❌ Имя должно содержать минимум 2 символа")
+		if len(firstName) < 3 {
+			fmt.Println("❌ Имя должно содержать минимум 3 символа")
 			continue
 		}
 		userData.FirstName = firstName
@@ -95,8 +94,8 @@ func collectRegistrationData() (UserData, error) {
 		}
 		lastName = strings.TrimSpace(lastName)
 
-		if len(lastName) <= 2 {
-			fmt.Println("❌ Фамилия должна содержать минимум 2 символа")
+		if len(lastName) < 3 {
+			fmt.Println("❌ Фамилия должна содержать минимум 3 символа")
 			continue
 		}
 		userData.LastName = lastName
@@ -107,12 +106,12 @@ func collectRegistrationData() (UserData, error) {
 }
 
 // Registration функция для отображения интерфейса регистрации пользователя
-func Registration(client auth.RegistrationServiceClient) dialog.AppState {
+func Registration(service registration.Servicer) dialog.AppState {
 	fmt.Println("\n=== РЕГИСТРАЦИЯ ===")
 
 	userData, err := collectRegistrationData()
 	if err != nil {
-		fmt.Println("Возникла ошибка при регистрации пользователя:", err)
+		fmt.Println("❌ Возникла ошибка при регистрации пользователя:", err)
 		return dialog.StateMainMenu
 	}
 
@@ -123,16 +122,16 @@ func Registration(client auth.RegistrationServiceClient) dialog.AppState {
 	fmt.Printf("Фамилия: %s\n", userData.LastName)
 
 	if confirmData() {
-		err := registration.RegisterUser(
-			client,
+		resp, err := service.RegisterUser(
 			userData.Login,
 			userData.Password,
 			userData.FirstName,
 			userData.LastName)
 		if err != nil {
-			fmt.Println("Возникла ошибка при регистрации пользователя:", err)
+			fmt.Println("❌ Возникла ошибка при регистрации пользователя:", err)
 			return dialog.StateMainMenu
 		}
+		fmt.Printf("Пользователь %s зарегистрирован успешно!\n", resp.UserId)
 	} else {
 		fmt.Println("❌ Регистрация отменена")
 	}

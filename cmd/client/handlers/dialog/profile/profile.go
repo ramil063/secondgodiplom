@@ -8,18 +8,33 @@ import (
 
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog/profile/items"
-	"github.com/ramil063/secondgodiplom/cmd/client/handlers/grpc"
+	"github.com/ramil063/secondgodiplom/cmd/client/services/items/bankcard"
+	"github.com/ramil063/secondgodiplom/cmd/client/services/items/binarydata"
+	"github.com/ramil063/secondgodiplom/cmd/client/services/items/password"
+	"github.com/ramil063/secondgodiplom/cmd/client/services/items/textdata"
 )
 
 // UserProfile функция работы с главным меню профиля пользователя
-func UserProfile(session dialog.UserSession, clients *grpc.Clients) dialog.AppState {
+func UserProfile(
+	session dialog.UserSession,
+	bcServ bankcard.Servicer,
+	bServ binarydata.Servicer,
+	passwordServ password.Servicer,
+	textdataServ textdata.Servicer,
+) dialog.AppState {
 	if session.AccessToken == "" {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		fmt.Println("❌ Пожалуйста авторизуйтесь!")
 		return dialog.StateMainMenu // Выход в главное меню
 	}
 	for {
-		dialog.ClearScreen()
+		err := dialog.ClearScreen()
+		if err != nil {
+			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
+		}
 		showUserProfileMenu()
 
 		reader := bufio.NewReader(os.Stdin)
@@ -32,20 +47,23 @@ func UserProfile(session dialog.UserSession, clients *grpc.Clients) dialog.AppSt
 
 		switch choice {
 		case "1":
-			items.WorkWithPassword(clients.PasswordsClient)
+			items.WorkWithPassword(passwordServ)
 		case "2":
-			items.WorkWithTextData(clients.TextDataClient)
+			items.WorkWithTextData(textdataServ)
 		case "3":
-			items.WorkWithBankCardData(clients.BankCardDataClient)
+			items.WorkWithBankCardData(bcServ)
 		case "4":
-			items.WorkWithFile(clients.BinaryDataClient)
+			items.WorkWithFile(bServ)
 		case "5":
 			return dialog.StateMainMenu // Выход в главное меню
 		case "6":
 			return dialog.StateExit // Полный выход
 		default:
 			fmt.Println("❌ Неверный выбор!")
-			dialog.PressEnterToContinue()
+			err = dialog.PressEnterToContinue()
+			if err != nil {
+				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
+			}
 		}
 	}
 }
