@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ramil063/secondgodiplom/cmd/client/generics/list"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/textdata"
 )
 
 // Servicer интерфейс по работе с текстовыми данными
 type Servicer interface {
 	GetTextData(ctx context.Context, id int64) (*textdata.TextDataItem, error)
-	ListTextDataItems(ctx context.Context, page int32, filter string) (*textdata.ListTextDataResponse, error)
+	ListItems(ctx context.Context, page int32, filter string) (*list.Response[textdata.TextDataItem], error)
 }
 
 // Service сервис по работе с текстовыми данными
@@ -37,8 +38,8 @@ func (s *Service) GetTextData(ctx context.Context, id int64) (*textdata.TextData
 	return resp, nil
 }
 
-// ListTextDataItems получение списка текстовых данных
-func (s *Service) ListTextDataItems(ctx context.Context, page int32, filter string) (*textdata.ListTextDataResponse, error) {
+// ListItems получение списка текстовых данных
+func (s *Service) ListItems(ctx context.Context, page int32, filter string) (*list.Response[textdata.TextDataItem], error) {
 	resp, err := s.client.ListTextDataItems(ctx, &textdata.ListTextDataRequest{
 		Page:   page,
 		Filter: filter,
@@ -46,5 +47,10 @@ func (s *Service) ListTextDataItems(ctx context.Context, page int32, filter stri
 	if err != nil {
 		return nil, fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 	}
-	return resp, nil
+	return &list.Response[textdata.TextDataItem]{
+		Items:       resp.TextDataItems,
+		TotalPages:  resp.TotalPages,
+		TotalCount:  resp.TotalCount,
+		CurrentPage: resp.CurrentPage,
+	}, nil
 }

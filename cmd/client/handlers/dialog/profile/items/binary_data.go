@@ -6,10 +6,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ramil063/secondgodiplom/cmd/client/generics/list"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/dialog"
 	"github.com/ramil063/secondgodiplom/cmd/client/handlers/items"
 	binaryQueue "github.com/ramil063/secondgodiplom/cmd/client/handlers/queue/binary"
 	binarydataService "github.com/ramil063/secondgodiplom/cmd/client/services/items/binarydata"
+	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/binarydata"
 )
 
 const defaultDownloadDir = "tmp/downloads"
@@ -53,7 +55,7 @@ func WorkWithFile(service binarydataService.Servicer) dialog.AppState {
 				continue
 			}
 		case "3":
-			err = listOfFilesData(service)
+			err = list.ShowListData(service, displayFileData)
 			if err != nil {
 				fmt.Printf("❌ Ошибка при листинге данных файлов: %v\n", err)
 				err = dialog.PressEnterToContinue()
@@ -198,127 +200,13 @@ func deleteFile() error {
 	return nil
 }
 
-func listOfFilesData(service binarydataService.Servicer) error {
-	currentPage := int32(1)
-	filter := ""
-
-	for {
-		err := dialog.ClearScreen()
-		if err != nil {
-			fmt.Printf("❌ Ошибка очистки экрана: %v\n", err)
-		}
-		fmt.Println("=== УПРАВЛЕНИЕ ФАЙЛАМИ ===")
-		fmt.Printf("Страница: %d | Фильтр: '%s'\n", currentPage, filter)
-		fmt.Println("===============================")
-
-		// Получение данных с сервера
-		ctx := items.CreateAuthContext()
-		resp, err := service.ListFiles(ctx, currentPage, filter)
-		if err != nil {
-			return fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
-		}
-
-		// Вывод паролей
-		if len(resp.Files) == 0 {
-			fmt.Println("Записей не найдено")
-		} else {
-			for _, val := range resp.Files {
-				fmt.Printf("ID: %d\n", val.Id)
-				fmt.Printf("   Имя: %s\n", val.Filename)
-				fmt.Printf("   Тип: %s\n", val.MimeType)
-				fmt.Printf("   Размер: %d\n", val.Size)
-				fmt.Printf("   Описание: %s\n", val.Description)
-				fmt.Printf("   Создано: %s\n", val.CreatedAt)
-				fmt.Println("---")
-			}
-
-			// Информация о пагинации
-			fmt.Printf("Страница %d из %d | Всего записей: %d\n",
-				currentPage, resp.TotalPages, resp.TotalCount)
-		}
-
-		// Меню навигации
-		fmt.Println("\n===============================")
-		fmt.Println("1. Следующая страница →")
-		fmt.Println("2. Предыдущая страница ←")
-		fmt.Println("3. Ввести номер страницы")
-		fmt.Println("4. Установить фильтр")
-		fmt.Println("5. Сбросить фильтр")
-		fmt.Println("0. Вернуться")
-		fmt.Println("===============================")
-		fmt.Print("Выберите действие: ")
-
-		reader := bufio.NewReader(os.Stdin)
-		choice, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
-		}
-		choice = strings.TrimSpace(choice)
-
-		switch choice {
-		case "1": // Следующая страница
-			if currentPage < resp.TotalPages {
-				currentPage++
-			} else {
-				fmt.Println("Это последняя страница")
-				err = dialog.PressEnterToContinue()
-				if err != nil {
-					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
-				}
-			}
-
-		case "2": // Предыдущая страница
-			if currentPage > 1 {
-				currentPage--
-			} else {
-				fmt.Println("Это первая страница")
-				err = dialog.PressEnterToContinue()
-				if err != nil {
-					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
-				}
-			}
-
-		case "3": // Ввод номера страницы
-			fmt.Print("Введите номер страницы: ")
-			var newPage int32
-			_, err = fmt.Scanln(&newPage)
-			if err != nil {
-				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
-			}
-			if newPage >= 1 && newPage <= resp.TotalPages {
-				currentPage = newPage
-			} else {
-				fmt.Println("Неверный номер страницы")
-				err = dialog.PressEnterToContinue()
-				if err != nil {
-					fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
-				}
-			}
-
-		case "4": // Установить фильтр
-			fmt.Print("Введите текст для фильтрации: ")
-			newFilter, err := reader.ReadString('\n')
-			if err != nil {
-				return fmt.Errorf("❌ Ошибка считывания: %s\n", err)
-			}
-			filter = strings.TrimSpace(newFilter)
-			currentPage = 1 // Сброс на первую страницу при новом фильтре
-
-		case "5": // Сбросить фильтр
-			filter = ""
-			currentPage = 1
-
-		case "0": // Выход
-			return nil
-
-		default:
-			fmt.Println("Неверный выбор")
-			err = dialog.PressEnterToContinue()
-			if err != nil {
-				fmt.Printf("❌ Ошибка при нажатии на Enter: %v\n", err)
-			}
-		}
-	}
+func displayFileData(val *binarydata.FileListItem) {
+	fmt.Printf("ID: %d\n", val.Id)
+	fmt.Printf("   Имя: %s\n", val.Filename)
+	fmt.Printf("   Тип: %s\n", val.MimeType)
+	fmt.Printf("   Размер: %d\n", val.Size)
+	fmt.Printf("   Описание: %s\n", val.Description)
+	fmt.Printf("   Создано: %s\n", val.CreatedAt)
 }
 
 func getFileInfo(service binarydataService.Servicer) error {

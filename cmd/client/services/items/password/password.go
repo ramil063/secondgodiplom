@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ramil063/secondgodiplom/cmd/client/generics/list"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/password"
 )
 
 // Servicer интерфейс по работе с данными паролей
 type Servicer interface {
 	GetPassword(ctx context.Context, id int64) (*password.PasswordItem, error)
-	ListPasswords(ctx context.Context, page int32, filter string) (*password.ListPasswordsResponse, error)
+	ListItems(ctx context.Context, page int32, filter string) (*list.Response[password.PasswordItem], error)
 }
 
 // Service сервис по работе с данными паролей
@@ -38,8 +39,8 @@ func (s *Service) GetPassword(ctx context.Context, id int64) (*password.Password
 	return resp, nil
 }
 
-// ListPasswords получение списка данных паролей
-func (s *Service) ListPasswords(ctx context.Context, page int32, filter string) (*password.ListPasswordsResponse, error) {
+// ListItems получение списка данных паролей
+func (s *Service) ListItems(ctx context.Context, page int32, filter string) (*list.Response[password.PasswordItem], error) {
 	// Получение данных с сервера
 	resp, err := s.client.ListPasswords(ctx, &password.ListPasswordsRequest{
 		Page:   page,
@@ -48,5 +49,11 @@ func (s *Service) ListPasswords(ctx context.Context, page int32, filter string) 
 	if err != nil {
 		return nil, fmt.Errorf("❌ Ошибка получения данных: %v\n", err)
 	}
-	return resp, nil
+
+	return &list.Response[password.PasswordItem]{
+		Items:       resp.Passwords,
+		TotalPages:  resp.TotalPages,
+		TotalCount:  resp.TotalCount,
+		CurrentPage: resp.CurrentPage,
+	}, nil
 }

@@ -3,13 +3,14 @@ package bankcard
 import (
 	"context"
 
+	"github.com/ramil063/secondgodiplom/cmd/client/generics/list"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/bankcard"
 )
 
 // Servicer интерфейс по работе с данными банковских карт
 type Servicer interface {
 	GetCardData(ctx context.Context, id int64) (bankcard.CardDataItem, error)
-	ListCardsData(ctx context.Context, page int32, filter string) (*bankcard.ListCardsDataResponse, error)
+	ListItems(ctx context.Context, page int32, filter string) (*list.Response[bankcard.CardDataItem], error)
 }
 
 // Service сервис по работе с данными банковских карт
@@ -46,8 +47,8 @@ func (s *Service) GetCardData(ctx context.Context, id int64) (bankcard.CardDataI
 	}, nil
 }
 
-// ListCardsData получение списка данных банковских карт
-func (s *Service) ListCardsData(ctx context.Context, page int32, filter string) (*bankcard.ListCardsDataResponse, error) {
+// ListItems получение списка данных банковских карт
+func (s *Service) ListItems(ctx context.Context, page int32, filter string) (*list.Response[bankcard.CardDataItem], error) {
 	resp, err := s.client.ListCardsData(ctx, &bankcard.ListCardsDataRequest{
 		Page:   page,
 		Filter: filter,
@@ -55,5 +56,11 @@ func (s *Service) ListCardsData(ctx context.Context, page int32, filter string) 
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+
+	return &list.Response[bankcard.CardDataItem]{
+		Items:       resp.Cards,
+		TotalPages:  resp.TotalPages,
+		TotalCount:  resp.TotalCount,
+		CurrentPage: resp.CurrentPage,
+	}, nil
 }

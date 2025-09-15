@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/ramil063/secondgodiplom/cmd/client/generics/list"
 	"github.com/ramil063/secondgodiplom/internal/proto/gen/items/binarydata"
 )
 
@@ -15,7 +16,7 @@ const numberOfChunks = 20
 type Servicer interface {
 	UploadData(ctx context.Context, fileData []byte, fileInfo os.FileInfo, filePath, description string) (*binarydata.UploadFileResponse, int, error)
 	DownloadData(ctx context.Context, fileID int64, downloadDir string) (string, error)
-	ListFiles(ctx context.Context, currentPage int32, filter string) (*binarydata.ListFilesResponse, error)
+	ListItems(ctx context.Context, page int32, filter string) (*list.Response[binarydata.FileListItem], error)
 	GetFileInfo(ctx context.Context, fileID int64) (*binarydata.FileInfoItem, error)
 }
 
