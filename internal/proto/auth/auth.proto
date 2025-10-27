@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "gen/auth";
+
+// --- Регистрация ---
+service RegistrationService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+}
+
+message RegisterRequest {
+  string login = 1;
+  string password = 3;
+  string first_name = 4;  // optional
+  string last_name = 5;   // optional
+}
+
+message RegisterResponse {
+  string user_id = 1;
+}
+
+// --- Аутентификация ---
+service AuthService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Refresh (RefreshRequest) returns (RefreshResponse);
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;  // Время жизни access token'а в секундах
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;  // Новый refresh token (ротация)
+  int64 expires_in = 3;
+}

@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package items.bankcard;
+
+option go_package = "gen/items/bankcard";
+
+import "google/protobuf/empty.proto";
+
+service Service  {
+  // Создание
+  rpc CreateCardData (CreateCardDataRequest) returns (CardDataItem);
+
+  // Получение по ID
+  rpc GetCardData (GetCardDataRequest) returns (CardDataItem);
+
+  // Получение списка
+  rpc ListCardsData (ListCardsDataRequest) returns (ListCardsDataResponse);
+
+  // Обновление
+  rpc UpdateCardData (UpdateCardDataRequest) returns (CardDataItem);
+
+  // Удаление
+  rpc DeleteCardData (DeleteCardDataRequest) returns (google.protobuf.Empty);
+}
+
+// Запросы
+message CreateCardDataRequest {
+  string number = 1;            // Номер (будет зашифрован)
+  int32 valid_until_year = 2;   // Годен до(год) (будет зашифрован)
+  int32 valid_until_month = 3;  // Годен до(месяц)
+  int32 cvv = 4;                // Код
+  string holder = 5;            // Держатель
+  string description = 6;       // Описание
+  string meta_data_name = 7;    // Название метаданных
+  string meta_data_value = 8;   // Значение метаданных
+}
+
+message ListCardsDataRequest {
+  int32 page = 1;   // Какая страница
+  int32 per_page = 2;  // Сколько записей на странице
+  string filter = 3; // Фильтр по тегам или категориям
+}
+
+message GetCardDataRequest {
+  int64 id = 1;  // UUID пароля
+}
+
+message UpdateCardDataRequest {
+  int64 id = 1;
+  string number = 2;            // Номер (будет зашифрован)
+  int32 valid_until_year = 3;   // Годен до(год) (будет зашифрован)
+  int32 valid_until_month = 4;  // Годен до(месяц)
+  int32 cvv = 5;                // Код
+  string holder = 6;            // Держатель
+  string description = 7;
+}
+
+message DeleteCardDataRequest {
+  int64 id = 1;
+}
+
+// Ответы
+message ListCardsDataResponse {
+  repeated CardDataItem cards = 1;
+  int32 total_count = 2;     // Общее количество записей
+  int32 total_pages = 3;     // Общее количество страниц
+  int32 current_page = 4;    // Текущая страница
+}
+
+// Основная сущность
+message CardDataItem {
+  int64 id = 1;                           // Идентификатор
+  string number = 2;                      // Номер (будет зашифрован)
+  int32 valid_until_year = 3;             // Годен до(год) (будет зашифрован)
+  int32 valid_until_month = 4;            // Годен до(месяц)
+  int32 cvv = 5;                          // Код
+  string holder = 6;                      // Держатель
+  string description = 7;                 // Описание
+  string created_at = 8;                  // Дата создания
+  repeated MetaData meta_data = 9; // Список метаданных
+}
+
+message MetaData {
+  int64 id = 1;               // Идентификатор
+  string name = 2;  // Название метаданных
+  string value = 3; // Значение метаданных
+}

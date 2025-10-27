@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package items.binarydata;
+
+option go_package = "gen/items/binarydata";
+
+service Service {
+  // Stream для загрузки файла (клиент -> сервер)
+  rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse);
+
+  // Stream для скачивания файла (сервер -> клиент)
+  rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileResponse);
+
+  // Получение информации
+  rpc GetFileInfo (GetFileInfoRequest) returns (FileInfoItem);
+
+  // Получение списка файлов
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+
+  // Удаление файла
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+}
+
+// Запросы для загрузки
+message UploadFileRequest {
+  oneof data {
+    FileMetadata metadata = 1;
+    FileChunk chunk = 2;
+  }
+}
+
+message FileMetadata {
+  string filename = 1;
+  string mime_type = 2;
+  int64 original_size = 3;
+  string description = 4;
+  int32 chunk_size = 5;
+  int32 total_chunks = 6;
+}
+
+message FileChunk {
+  bytes data = 1;
+  int32 chunk_index = 2;
+  bool is_last = 3;
+}
+
+message UploadFileResponse {
+  int64 file_id = 1;
+  int64 bytes_received = 2;
+  string status = 3;
+}
+
+// Запросы для скачивания
+message DownloadFileRequest {
+  int64 file_id = 1;
+}
+
+message DownloadFileResponse {
+  oneof data {
+    FileMetadata metadata = 1;  // Первое сообщение - информация о файле
+    FileChunk chunk = 2;
+  }
+}
+
+// Для списка файлов
+message ListFilesRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+  string filter = 3; // Фильтр по тегам или категориям
+}
+
+message FileListItem {
+  int64 id = 1;
+  string filename = 2;
+  string mime_type = 3;
+  int64 size = 4;
+  string created_at = 5;
+  string description = 6;
+}
+
+message ListFilesResponse {
+  repeated FileListItem files = 1;
+  int32 total_count = 2;
+  int32 total_pages = 3;
+  int32 current_page = 4;    // Текущая страница
+}
+
+// Для удаления
+message DeleteFileRequest {
+  int64 file_id = 1;
+}
+
+message DeleteFileResponse {
+  bool success = 1;
+}
+
+message MetaData {
+  int64 id = 1;     // Идентификатор
+  string name = 2;  // Название метаданных
+  string value = 3; // Значение метаданных
+}
+
+//Для получения информации
+
+message GetFileInfoRequest {
+  int64 file_id = 1;
+}
+
+message FileInfoItem {
+  int64 id = 1;
+  string filename = 2;
+  string mime_type = 3;
+  int64 size = 4;
+  string created_at = 5;
+  string description = 6;
+  repeated MetaData meta_data = 7;
+}
